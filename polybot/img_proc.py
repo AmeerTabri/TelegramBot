@@ -1,4 +1,6 @@
 from pathlib import Path
+import random
+
 from matplotlib.image import imread, imsave
 
 
@@ -51,17 +53,44 @@ class Img:
             self.data[i] = res
 
     def rotate(self):
-        # TODO remove the `raise` below, and write your implementation
-        raise NotImplementedError()
+        n, m = len(self.data), len(self.data[0])
+        rotated = [[0] * n for _ in range(m)]
+
+        for i in range(n):
+            for j in range(m):
+                rotated[j][n - 1 - i] = self.data[i][j]
+
+        self.data = rotated
 
     def salt_n_pepper(self):
-        # TODO remove the `raise` below, and write your implementation
-        raise NotImplementedError()
+        n, m = len(self.data), len(self.data[0])
+        for i in range(n):
+            for j in range(m):
+                rand = random.random()
+                if rand < 0.2:
+                    self.data[i][j] = 255
+                elif rand > 0.8:
+                    self.data[i][j] = 0
 
     def concat(self, other_img, direction='horizontal'):
-        # TODO remove the `raise` below, and write your implementation
-        raise NotImplementedError()
+        n1, m1 = len(self.data), len(self.data[0])
+        n2, m2 = len(other_img.data), len(other_img.data[0])
+
+        if direction == 'horizontal':
+            if n1 != n2:
+                raise RuntimeError()
+            self.data = [row1 + row2 for row1, row2 in zip(self.data, other_img.data)]
+
+        elif direction == 'vertical':
+            if m1 != m2:
+                raise RuntimeError()
+            self.data = self.data + other_img.data
 
     def segment(self):
-        # TODO remove the `raise` below, and write your implementation
-        raise NotImplementedError()
+        n, m = len(self.data), len(self.data[0])
+        for i in range(n):
+            for j in range(m):
+                if self.data[i][j] > 100:
+                    self.data[i][j] = 255
+                else:
+                    self.data[i][j] = 0
