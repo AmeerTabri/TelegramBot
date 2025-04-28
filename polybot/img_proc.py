@@ -79,12 +79,20 @@ class Img:
         if direction == 'horizontal':
             if n1 != n2:
                 raise RuntimeError()
-            self.data = [row1 + row2 for row1, row2 in zip(self.data, other_img.data)]
+            concat_image = [[0] * (m1 + m2) for _ in range(n1)]
+            for i in range(n1):
+                for j in range(m1 + m2):
+                    concat_image[i][j] = self.data[i][j] if j < m1 else other_img.data[i][j - m1]
+            self.data = concat_image
 
         elif direction == 'vertical':
             if m1 != m2:
                 raise RuntimeError()
-            self.data = self.data + other_img.data
+            concat_image = [[0] * m1 for _ in range(n1+n2)]
+            for i in range(n1 + n2):
+                for j in range(m1):
+                    concat_image[i][j] = self.data[i][j] if i < n1 else other_img.data[i - n1][j]
+            self.data = concat_image
 
     def segment(self):
         n, m = len(self.data), len(self.data[0])

@@ -75,4 +75,52 @@ class QuoteBot(Bot):
 
 
 class ImageProcessingBot(Bot):
-    pass
+    def handle_message(self, msg):
+        logger.info(f'Incoming message: {msg}')
+        chat_id = msg['chat']['id']
+
+        try:
+            if not self.is_current_msg_photo(msg):
+                self.send_text(chat_id, "Please send me a photo!")
+                return
+
+            # Download the photo
+            img_path = self.download_user_photo(msg)
+            logger.info(f"Downloaded photo to: {img_path}")
+
+            # Load image for processing
+            img = Img(img_path)
+
+            # Get the caption (filter name)
+            caption = msg.get('caption', '').strip().lower()
+
+            # Apply filters based on caption
+            if caption == 'blur':
+                img.blur()
+            elif caption == 'contour':
+                img.contour()
+            elif caption == 'rotate':
+                img.rotate()
+            elif caption == 'segment':
+                img.segment()
+            elif caption == 'salt and pepper':
+                img.salt_n_pepper()
+            elif caption == 'concat':
+                other_img = Img(img_path)  # Use another image (or reuse the same)
+                img.concat(other_img)
+            else:
+                self.send_text(chat_id, "Invalid caption! Use one of: Blur, Contour, Rotate, Segment, Salt and pepper.")
+                return
+
+            # Save processed image
+            img.save_img()
+            processed_path = img.save_img()
+            logger.info(f"Processed image saved at: {processed_path}")
+
+            # Send processed image back
+            self.send_photo(chat_id, processed_path)
+
+        except Exception as e:
+            logger.error(f"Error processing image: {e}")
+            self.send_text(chat_id, "Something went wrong... please try again.")
+
