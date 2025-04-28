@@ -102,3 +102,50 @@ class Img:
                     self.data[i][j] = 255
                 else:
                     self.data[i][j] = 0
+
+    def invert(self):
+        n, m = len(self.data), len(self.data[0])
+        for i in range(n):
+            for j in range(m):
+                self.data[i][j] = 255 - self.data[i][j]
+
+    def binary(self):
+        n, m = len(self.data), len(self.data[0])
+        for i in range(n):
+            for j in range(m):
+                if self.data[i][j] > 127:
+                    self.data[i][j] = 255
+                else:
+                    self.data[i][j] = 0
+
+    def flip(self, direction='vertical'):
+        n, m = len(self.data), len(self.data[0])
+
+        if direction == 'horizontal':
+            for i in range(n // 2):
+                for j in range(m):
+                    self.data[i][j], self.data[n - i - 1][j] = self.data[n - i - 1][j], self.data[i][j]
+
+        elif direction == 'vertical':
+            for i in range(n):
+                for j in range(m // 2):
+                    self.data[i][j], self.data[i][m - j - 1] = self.data[i][m - j - 1], self.data[i][j]
+
+    # def apply_kernel(self, kernel, factor=1):
+    #     k_size = len(kernel)
+    #     offset = k_size // 2
+    #     n, m = len(self.data), len(self.data[0])
+    #
+    #     result = [[0] * m for _ in range(n)]
+    #
+    #     for i in range(offset, n - offset):
+    #         for j in range(offset, m - offset):
+    #             acc = 0
+    #             for ki in range(k_size):
+    #                 for kj in range(k_size):
+    #                     ni = i + ki - offset
+    #                     nj = j + kj - offset
+    #                     acc += self.data[ni][nj] * kernel[ki][kj]
+    #             result[i][j] = min(max(acc // factor, 0), 255)  # Clamp to 0-255
+    #
+    #     self.data = result

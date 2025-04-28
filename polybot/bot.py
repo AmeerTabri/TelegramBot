@@ -3,7 +3,7 @@ from loguru import logger
 import os
 import time
 from telebot.types import InputFile
-from polybot.img_proc import Img
+from img_proc import Img
 
 
 class Bot:
@@ -91,26 +91,38 @@ class ImageProcessingBot(Bot):
             # Load image for processing
             img = Img(img_path)
 
-            # Get the caption (filter name)
-            caption = msg.get('caption', '').strip().lower()
+            # Parse multiple captions (comma-separated)
+            caption_raw = msg.get('caption', '').strip().lower()
+            captions = [cap.strip() for cap in caption_raw.split(',') if cap.strip()]
 
-            # Apply filters based on caption
-            if caption == 'blur':
-                img.blur()
-            elif caption == 'contour':
-                img.contour()
-            elif caption == 'rotate':
-                img.rotate()
-            elif caption == 'segment':
-                img.segment()
-            elif caption == 'salt and pepper':
-                img.salt_n_pepper()
-            elif caption == 'concat':
-                other_img = Img(img_path)  # Use another image (or reuse the same)
-                img.concat(other_img)
-            else:
-                self.send_text(chat_id, "Invalid caption! Use one of: Blur, Contour, Rotate, Segment, Salt and pepper.")
+            if not captions:
+                self.send_text(chat_id, "Please provide at least one filter in the caption.")
                 return
+
+            # Apply each filter in sequence
+            for caption in captions:
+                if caption == 'blur':
+                    img.blur()
+                elif caption == 'contour':
+                    img.contour()
+                elif caption == 'rotate':
+                    img.rotate()
+                elif caption == 'segment':
+                    img.segment()
+                elif caption == 'salt and pepper':
+                    img.salt_n_pepper()
+                elif caption == 'concat':
+                    other_img = Img(img_path)
+                    img.concat(other_img)
+                elif caption == 'invert':
+                    img.invert()
+                elif caption == 'binary':
+                    img.binary()
+                elif caption == 'flip':
+                    img.flip()
+                else:
+                    self.send_text(chat_id, f"Invalid filter: {caption}")
+                    return
 
             # Save processed image
             img.save_img()
@@ -123,4 +135,3 @@ class ImageProcessingBot(Bot):
         except Exception as e:
             logger.error(f"Error processing image: {e}")
             self.send_text(chat_id, "Something went wrong... please try again.")
-
