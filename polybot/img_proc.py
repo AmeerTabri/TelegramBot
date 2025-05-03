@@ -78,7 +78,7 @@ class Img:
 
         if direction == 'horizontal':
             if n1 != n2:
-                raise RuntimeError()
+                raise RuntimeError("Cannot concatenate horizontally: image heights are different.")
             concat_image = [[0] * (m1 + m2) for _ in range(n1)]
             for i in range(n1):
                 for j in range(m1 + m2):
@@ -87,7 +87,7 @@ class Img:
 
         elif direction == 'vertical':
             if m1 != m2:
-                raise RuntimeError()
+                raise RuntimeError("Cannot concatenate vertically: image widths are different.")
             concat_image = [[0] * m1 for _ in range(n1+n2)]
             for i in range(n1 + n2):
                 for j in range(m1):
@@ -121,31 +121,12 @@ class Img:
     def flip(self, direction='vertical'):
         n, m = len(self.data), len(self.data[0])
 
-        if direction == 'horizontal':
-            for i in range(n // 2):
-                for j in range(m):
-                    self.data[i][j], self.data[n - i - 1][j] = self.data[n - i - 1][j], self.data[i][j]
-
-        elif direction == 'vertical':
+        if direction == 'vertical':
             for i in range(n):
                 for j in range(m // 2):
                     self.data[i][j], self.data[i][m - j - 1] = self.data[i][m - j - 1], self.data[i][j]
 
-    # def apply_kernel(self, kernel, factor=1):
-    #     k_size = len(kernel)
-    #     offset = k_size // 2
-    #     n, m = len(self.data), len(self.data[0])
-    #
-    #     result = [[0] * m for _ in range(n)]
-    #
-    #     for i in range(offset, n - offset):
-    #         for j in range(offset, m - offset):
-    #             acc = 0
-    #             for ki in range(k_size):
-    #                 for kj in range(k_size):
-    #                     ni = i + ki - offset
-    #                     nj = j + kj - offset
-    #                     acc += self.data[ni][nj] * kernel[ki][kj]
-    #             result[i][j] = min(max(acc // factor, 0), 255)  # Clamp to 0-255
-    #
-    #     self.data = result
+        elif direction == 'horizontal':
+            for i in range(n // 2):
+                for j in range(m):
+                    self.data[i][j], self.data[n - i - 1][j] = self.data[n - i - 1][j], self.data[i][j]
