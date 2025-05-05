@@ -28,7 +28,9 @@ class Img:
         return new_path
 
     def blur(self, blur_level=16):
-
+        n, m = len(self.data), len(self.data[0])
+        if blur_level <= 0 or blur_level >= min(n, m):
+            raise RuntimeError(f"Invalid blur level!")
         height = len(self.data)
         width = len(self.data[0])
         filter_sum = blur_level ** 2
@@ -130,3 +132,15 @@ class Img:
             for i in range(n // 2):
                 for j in range(m):
                     self.data[i][j], self.data[n - i - 1][j] = self.data[n - i - 1][j], self.data[i][j]
+
+    def pixelate(self, pixelate_level=10):
+        n, m = len(self.data), len(self.data[0])
+        if pixelate_level <= 0 or pixelate_level >= min(n, m):
+            raise RuntimeError(f"Invalid pixelation level!")
+        for i in range(0, n, pixelate_level):
+            for j in range(0, m, pixelate_level):
+                block = [self.data[x][y] for x in range(i, min(i + pixelate_level, n)) for y in range(j, min(j + pixelate_level, m))]
+                avg = sum(block) // len(block)
+                for x in range(i, min(i + pixelate_level, n)):
+                    for y in range(j, min(j + pixelate_level, m)):
+                        self.data[x][y] = avg

@@ -95,8 +95,10 @@ class ImageProcessingBot(Bot):
             "6) *concat* - Concatenates the image with itself.\n"
             "7) *invert* - Inverts pixel intensities.\n"
             "8) *binary* - Converts to black & white.\n"
-            "9) *flip* - Flips the image horizontally.\n"
+            "9) *flip* - Flips the image.\n"
+            "10) *pixel* - pixelate the image.\n"
             "Note: *concat* and *flip* can be applied in *horizontal* or *vertical* direction.\n"
+            "Note: *blur* and *pixel* can be given a level value.\n"
         )
         self.telegram_bot_client.send_message(chat_id, filter_list, parse_mode='Markdown')
 
@@ -128,8 +130,10 @@ class ImageProcessingBot(Bot):
 
             for caption in captions:
                 try:
-                    if caption == 'blur':
-                        img.blur()
+                    if caption.startswith('blur'):
+                        parts = caption.split()
+                        level = int(parts[1]) if len(parts) > 1 and parts[1].isdigit() else 16
+                        img.blur(level)
                     elif caption == 'contour':
                         img.contour()
                     elif caption == 'rotate':
@@ -140,19 +144,20 @@ class ImageProcessingBot(Bot):
                         img.salt_n_pepper()
                     elif caption.startswith('concat'):
                         parts = caption.split()
-                        direction = parts[1] if len(parts) > 1 and parts[1] in ['horizontal',
-                                                                                'vertical'] else 'horizontal'
-                        other_img = Img(img_path)
-                        img.concat(other_img, direction)
+                        direction = parts[1] if len(parts) > 1 and parts[1] in ['horizontal', 'vertical'] else 'horizontal'
+                        img.concat(img, direction)
                     elif caption.startswith('flip'):
                         parts = caption.split()
-                        direction = parts[1] if len(parts) > 1 and parts[1] in ['horizontal',
-                                                                                'vertical'] else 'vertical'
+                        direction = parts[1] if len(parts) > 1 and parts[1] in ['horizontal', 'vertical'] else 'vertical'
                         img.flip(direction)
                     elif caption == 'invert':
                         img.invert()
                     elif caption == 'binary':
                         img.binary()
+                    elif caption.startswith('pixel'):
+                        parts = caption.split()
+                        level = int(parts[1]) if len(parts) > 1 and parts[1].isdigit() else 10
+                        img.pixelate(level)
                     else:
                         self.send_text(chat_id, f"Invalid filter: {caption}\nFor the filters list type: captions")
                         return
