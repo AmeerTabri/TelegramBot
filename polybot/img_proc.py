@@ -1,5 +1,6 @@
 from pathlib import Path
 import random
+import requests
 
 from matplotlib.image import imread, imsave
 
@@ -144,3 +145,16 @@ class Img:
                 for x in range(i, min(i + pixelate_level, n)):
                     for y in range(j, min(j + pixelate_level, m)):
                         self.data[x][y] = avg
+
+    def predict(self):
+        url = "http://44.244.218.74:8080/predict"
+        with open(self.path, 'rb') as image_file:
+            files = {'file': image_file}
+            try:
+                response = requests.post(url, files=files)
+                response.raise_for_status()
+                data = response.json()
+                return data.get("labels", [])
+            except requests.RequestException as e:
+                print("Failed to get prediction:", e)
+                return []

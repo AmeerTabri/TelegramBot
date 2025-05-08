@@ -4,6 +4,8 @@ import os
 import time
 from telebot.types import InputFile
 from polybot.img_proc import Img
+import shutil
+from pathlib import Path
 
 
 class Bot:
@@ -33,7 +35,7 @@ class Bot:
 
     def download_user_photo(self, msg):
         """
-        Downloads the photos that sent to the Bot to `photos` directory (should be existed)
+        Downloads the photos that sent to the Bot to photos directory (should be existed)
         :return:
         """
         if not self.is_current_msg_photo(msg):
@@ -65,6 +67,15 @@ class Bot:
         logger.info(f'Incoming message: {msg}')
         self.send_text(msg['chat']['id'], f'Your original message: {msg["text"]}')
 
+    def send_greeting(self, chat_id):
+        greeting = (
+            "👋 Hi there! Welcome to PolyBot.\n"
+            "You can send me a *photo* with a *caption* specifying one or more filters (comma-separated).\n"
+            "You can also send me a *photo* with predict caption to list the objects"
+            "For a list of available filters, type: *captions*"
+        )
+        self.telegram_bot_client.send_message(chat_id, greeting, parse_mode='Markdown')
+
 
 class QuoteBot(Bot):
     def handle_message(self, msg):
@@ -75,15 +86,6 @@ class QuoteBot(Bot):
 
 
 class ImageProcessingBot(Bot):
-    def send_greeting(self, chat_id):
-        greeting = (
-            "👋 Hi there! Welcome to PolyBot.\n"
-            "Send me a *photo* with a *caption* specifying one or more filters (comma-separated).\n"
-            "For a list of available filters, type: *captions*"
-        )
-        self.telegram_bot_client.send_message(chat_id, greeting, parse_mode='Markdown')
-        self.send_filter_list(chat_id)
-
     def send_filter_list(self, chat_id):
         filter_list = (
             "The Available Filters Are:\n"
@@ -96,9 +98,10 @@ class ImageProcessingBot(Bot):
             "7) *invert* - Inverts pixel intensities.\n"
             "8) *binary* - Converts to black & white.\n"
             "9) *flip* - Flips the image.\n"
-            "10) *pixel* - pixelate the image.\n"
-            "Note: *concat* and *flip* can be applied in *horizontal* or *vertical* direction.\n"
-            "Note: *blur* and *pixel* can be given a level value.\n"
+            "10) *pixel* - Pixelates the image.\n"
+            "Note1: *concat* and *flip* can be applied in *horizontal* or *vertical* direction.\n"
+            "Note2: *blur* and *pixel* can be given a level value.\n"
+            "Note3: Use *concat1* to upload the first image and *concat1* to upload the second image for concatenation.\n"
         )
         self.telegram_bot_client.send_message(chat_id, filter_list, parse_mode='Markdown')
 
@@ -130,6 +133,28 @@ class ImageProcessingBot(Bot):
 
             for caption in captions:
                 try:
+                    if caption == 'concat1':
+                        user_dir = Path(f'temp/{chat_id}')
+                        user_dir.mkdir(parents=True, exist_ok=True)
+                        saved_path = img.save_img()
+                        first_img_path = user_dir / 'first_img.jpg'
+                        shutil.copy(saved_path, first_img_path)
+                        self.send_text(chat_id, "Send the second image with direction.")
+                        return
+
+                    elif caption.startswith('concat2'):
+                        parts = caption.split()
+                        direction = parts[1] if len(parts) > 1 and parts[1] in ['horizontal', 'vertical'] else 'horizontal'
+                        first_img_path = Path(f'temp/{chat_id}/first_img.jpg')
+                        if not first_img_path.exists():
+                            self.send_text(chat_id, "First image not found. Please send the first image.")
+                            return
+
+                        first_img = Img(str(first_img_path))
+                        img.concat(first_img, direction)
+                        first_img_path.unlink()
+                        continue
+
                     if caption.startswith('blur'):
                         parts = caption.split()
                         level = int(parts[1]) if len(parts) > 1 and parts[1].isdigit() else 16
@@ -158,6 +183,10 @@ class ImageProcessingBot(Bot):
                         parts = caption.split()
                         level = int(parts[1]) if len(parts) > 1 and parts[1].isdigit() else 10
                         img.pixelate(level)
+                    elif caption == 'predict':
+                        predictions = img.predict()
+                        self.send_text(chat_id, f"Predictions = {predictions}")
+                        return
                     else:
                         self.send_text(chat_id, f"Invalid filter: {caption}\nFor the filters list type: captions")
                         return
@@ -173,3 +202,12 @@ class ImageProcessingBot(Bot):
         except Exception as e:
             logger.error(f"Error processing image: {e}")
             self.send_text(chat_id, "Something went wrong... please try again.")
+
+
+class ImagePredictionBot(Bot):
+    def send_ai_list(self, chat_id):
+        yolo_list = (
+            "The Available AI features Are:\n"
+            "*predict*: list the objects of the picture"
+        )
+        self.telegram_bot_client.send_message(chat_id, yolo_list, parse_mode='Markdown')
