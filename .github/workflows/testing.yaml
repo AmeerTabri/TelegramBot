@@ -1,22 +1,21 @@
-name: Project auto-testing
+name: Yolo unittesting
+
+#on:
+#  pull_request:
+#    branches:
+#      - main
+
 on:
+  # The workflow will run when a push is made to branch `main`
   push:
     branches:
-      - main
-
-permissions: {}
+     - main
 
 jobs:
   TestImgProcessingChatbotApp:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/checkout@v2
-        with:
-          repository: alonitac/ImageProcessingChatBotProject
-          path: ImageProcessingChatBotProjectOriginal
-      - name: Copy test files
-        run: mv -f ImageProcessingChatBotProjectOriginal/polybot/test/* polybot/test/
+      - uses: actions/checkout@v4
       - name: Install dependencies
         run: |
           pip install -r polybot/requirements.txt
