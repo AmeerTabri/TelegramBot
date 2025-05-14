@@ -6,10 +6,14 @@ from telebot.types import InputFile
 from polybot.img_proc import Img
 import shutil
 from pathlib import Path
+from polybot.s3 import upload_image_to_s3, download_predicted_image_from_s3
+
+
+def is_current_msg_photo(msg):
+    return 'photo' in msg
 
 
 class Bot:
-
     def __init__(self, token, telegram_chat_url):
         # create a new instance of the TeleBot class.
         # all communication with Telegram servers are done using self.telegram_bot_client
@@ -30,15 +34,8 @@ class Bot:
     def send_text_with_quote(self, chat_id, text, quoted_msg_id):
         self.telegram_bot_client.send_message(chat_id, text, reply_to_message_id=quoted_msg_id)
 
-    def is_current_msg_photo(self, msg):
-        return 'photo' in msg
-
     def download_user_photo(self, msg):
-        """
-        Downloads the photos that sent to the Bot to photos directory (should be existed)
-        :return:
-        """
-        if not self.is_current_msg_photo(msg):
+        if not is_current_msg_photo(msg):
             raise RuntimeError(f'Message content of type \'photo\' expected')
 
         file_info = self.telegram_bot_client.get_file(msg['photo'][-1]['file_id'])
@@ -110,7 +107,7 @@ class ImageProcessingBot(Bot):
         chat_id = msg['chat']['id']
 
         try:
-            if not self.is_current_msg_photo(msg):
+            if not is_current_msg_photo(msg):
                 text = msg['text'].strip().lower()
                 if text == '/start':
                     self.send_greeting(chat_id)
@@ -122,6 +119,7 @@ class ImageProcessingBot(Bot):
 
             img_path = self.download_user_photo(msg)
             logger.info(f"Downloaded photo to: {img_path}")
+
             img = Img(img_path)
 
             caption_raw = msg.get('caption', '').strip().lower()
@@ -184,8 +182,20 @@ class ImageProcessingBot(Bot):
                         level = int(parts[1]) if len(parts) > 1 and parts[1].isdigit() else 10
                         img.pixelate(level)
                     elif caption == 'predict':
-                        predictions = img.predict()
+                        s3_key = f"{chat_id}/original/{Path(img_path).name}"
+                        upload_image_to_s3(img_path, s3_key)
+
+                        predictions = img.predict(chat_id)
+                        if not predictions:
+                            self.send_text(chat_id, "⚠️ Yolo service is not responding. Please try again later!")
+                            return
+
                         self.send_text(chat_id, f"Predictions = {predictions}")
+
+                        image_name = Path(img_path).name
+                        predicted_path = f"/tmp/predicted_{image_name}"
+                        download_predicted_image_from_s3(chat_id, image_name, predicted_path)
+                        self.send_photo(chat_id, predicted_path)
                         return
                     else:
                         self.send_text(chat_id, f"Invalid filter: {caption}\nFor the filters list type: captions")
