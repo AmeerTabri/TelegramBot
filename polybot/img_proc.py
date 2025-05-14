@@ -12,7 +12,6 @@ def rgb2gray(rgb):
 
 
 class Img:
-
     def __init__(self, path):
         """
         Do not change the constructor implementation
