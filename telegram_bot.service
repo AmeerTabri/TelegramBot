@@ -4,7 +4,7 @@ After=network.target
 
 [Service]
 WorkingDirectory=/home/ubuntu/TelegramBot
-ExecStart=/home/ubuntu/TelegramBot/venv/bin/python -m polybot.app
+ExecStart=/home/ubuntu/TelegramBot/.venv/bin/python -m polybot.app
 Environment=TELEGRAM_BOT_TOKEN=7663738647:AAGgmqctUP-iYR2j3M1l-kD7G7OVoVCa3xg
 Environment=BOT_APP_URL=http://34.214.135.93
 Restart=always
