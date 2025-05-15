@@ -39,3 +39,4 @@ for service in telegram_bot ngrok; do
     echo "✅ $service.service is running."
   fi
 done
+
