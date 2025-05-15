@@ -6,7 +6,7 @@ After=network.target
 WorkingDirectory=/home/ubuntu/TelegramBot
 ExecStart=/home/ubuntu/TelegramBot/.venv/bin/python -m polybot.app
 Environment=TELEGRAM_BOT_TOKEN=7663738647:AAGgmqctUP-iYR2j3M1l-kD7G7OVoVCa3xg
-Environment=BOT_APP_URL=Environment=BOT_APP_URL=http:https://warthog-suited-bear.ngrok-free.app
+Environment=BOT_APP_URL=https://warthog-suited-bear.ngrok-free.app
 Restart=always
 
 [Install]
