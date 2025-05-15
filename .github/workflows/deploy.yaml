@@ -1,5 +1,5 @@
 # The name of the workflow
-name: Yolo Deploy
+name: polybot Deploy
 
 on:
   # The workflow will run when a push is made to branch `main`

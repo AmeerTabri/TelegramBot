@@ -1,15 +1,11 @@
-name: Yolo unittesting
+name: polybot unittesting
 
-#on:
-#  pull_request:
-#    branches:
-#      - main
 
 on:
-  # The workflow will run when a push is made to branch `main`
-  push:
+  pull_request:
     branches:
-     - main
+      - main
+
 
 jobs:
   TestImgProcessingChatbotApp:
