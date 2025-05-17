@@ -18,7 +18,6 @@ class Bot:
         self.telegram_bot_client.set_webhook(url=f'{telegram_chat_url}/{token}/', timeout=60)
         logger.info(f'Telegram Bot information\n\n{self.telegram_bot_client.get_me()}')
 
-        # Child bots
         self.processor = ImageProcessingBot(self.telegram_bot_client)
         self.predictor = ImagePredictionBot(self.telegram_bot_client)
 
@@ -66,11 +65,7 @@ class QuoteBot(Bot):
         chat_id = msg['chat']['id']
         text = msg.get("text", "")
         if text != "Please don't quote me":
-            self.telegram_bot_client.send_message(
-                chat_id,
-                text,
-                reply_to_message_id=msg["message_id"]
-            )
+            self.telegram_bot_client.send_message(chat_id, text, reply_to_message_id=msg["message_id"])
 
 
 class ImageProcessingBot:
@@ -92,7 +87,7 @@ class ImageProcessingBot:
             "10) *pixel* - Pixelates the image.\n"
             "Note1: *concat* and *flip* can be applied in *horizontal* or *vertical* direction.\n"
             "Note2: *blur* and *pixel* can be given a level value.\n"
-            "Note3: Use *concat1* to upload the first image and *concat1* to upload the second image for concatenation.\n"
+            "Note3: Use *concat1* to upload the first image and *concat2* to upload the second image for concatenation.\n"
         )
         self.bot.send_message(chat_id, filters, parse_mode='Markdown')
 
@@ -121,6 +116,8 @@ class ImageProcessingBot:
                     saved_path = img.save_img()
                     shutil.copy(saved_path, user_dir / 'first_img.jpg')
                     self.bot.send_message(chat_id, "Send the second image with the direction.")
+                    os.remove(saved_path)
+                    os.remove(img_path)
                     return
 
                 if caption.startswith('concat2'):
@@ -132,7 +129,7 @@ class ImageProcessingBot:
                         return
                     first_img = Img(str(first_img_path))
                     img.concat(first_img, direction)
-                    first_img_path.unlink()
+                    first_img_path.unlink(missing_ok=True)
                     continue
 
                 if caption.startswith('blur'):
@@ -165,6 +162,8 @@ class ImageProcessingBot:
 
             processed_path = img.save_img()
             self.bot.send_photo(chat_id, InputFile(processed_path))
+            os.remove(processed_path)
+            os.remove(img_path)
 
         except Exception as e:
             logger.error(f"ImageProcessingBot error: {e}")
@@ -203,6 +202,7 @@ class ImagePredictionBot:
             predictions = img.predict(chat_id)
             if not predictions:
                 self.bot.send_message(chat_id, "⚠️ Yolo service is not responding. Please try again later!")
+                os.remove(img_path)
                 return
 
             objects = dict(Counter(predictions))
@@ -214,8 +214,10 @@ class ImagePredictionBot:
                 predicted_path = f"/tmp/predicted_{Path(img_path).name}"
                 download_predicted_image_from_s3(chat_id, Path(img_path).name, predicted_path)
                 self.bot.send_photo(chat_id, InputFile(predicted_path))
+                os.remove(predicted_path)
+
+            os.remove(img_path)
 
         except Exception as e:
             logger.error(f"ImagePredictionBot error: {e}")
             self.bot.send_message(chat_id, "Prediction failed.")
-
