@@ -144,6 +144,10 @@ class ImageProcessingBot:
                     img.segment()
                 elif caption == 'salt and pepper':
                     img.salt_n_pepper()
+                elif caption.startswith('concat'):
+                    parts = caption.split()
+                    direction = parts[1] if len(parts) > 1 and parts[1] in ['horizontal', 'vertical'] else 'horizontal'
+                    img.concat(img, direction)
                 elif caption.startswith('flip'):
                     parts = caption.split()
                     direction = parts[1] if len(parts) > 1 else 'vertical'
@@ -189,20 +193,21 @@ class ImagePredictionBot:
         try:
             file_info = self.bot.get_file(msg['photo'][-1]['file_id'])
             data = self.bot.download_file(file_info.file_path)
-            folder = file_info.file_path.split('/')[0]
-            os.makedirs(folder, exist_ok=True)
-            with open(file_info.file_path, 'wb') as f:
+            ext = Path(file_info.file_path).suffix or '.jpg'
+            tmp_original_path = f"temp/{chat_id}_original{ext}"
+            tmp_predicted_path = f"temp/{chat_id}_predicted{ext}"
+
+            with open(tmp_original_path, 'wb') as f:
                 f.write(data)
-            img_path = file_info.file_path
 
-            s3_key = f"{chat_id}/original/{Path(img_path).name}"
-            upload_image_to_s3(img_path, s3_key)
+            s3_key = f"{chat_id}/original/{Path(tmp_original_path).name}"
+            upload_image_to_s3(tmp_original_path, s3_key)
 
-            img = Img(img_path)
+            img = Img(tmp_original_path)
             predictions = img.predict(chat_id)
             if not predictions:
                 self.bot.send_message(chat_id, "⚠️ Yolo service is not responding. Please try again later!")
-                os.remove(img_path)
+                os.remove(tmp_original_path)
                 return
 
             objects = dict(Counter(predictions))
@@ -211,12 +216,11 @@ class ImagePredictionBot:
                 self.bot.send_message(chat_id, f"{obj} × {count}")
 
             if show_image:
-                predicted_path = f"/tmp/predicted_{Path(img_path).name}"
-                download_predicted_image_from_s3(chat_id, Path(img_path).name, predicted_path)
-                self.bot.send_photo(chat_id, InputFile(predicted_path))
-                os.remove(predicted_path)
+                download_predicted_image_from_s3(chat_id, Path(tmp_original_path).name, tmp_predicted_path)
+                self.bot.send_photo(chat_id, InputFile(tmp_predicted_path))
+                os.remove(tmp_predicted_path)
 
-            os.remove(img_path)
+            os.remove(tmp_original_path)
 
         except Exception as e:
             logger.error(f"ImagePredictionBot error: {e}")
