@@ -1,0 +1,13 @@
+[Unit]
+Description=Simple Python Server
+After=network.target
+
+[Service]
+WorkingDirectory=/home/ubuntu/TelegramBot
+ExecStart=/home/ubuntu/TelegramBot/.venv/bin/python -m polybot.app
+Environment=TELEGRAM_BOT_TOKEN=7540130264:AAFMC1_UxoK03Emja7lIWyUJ0ZahdKBj4TI
+Environment=BOT_APP_URL=https://warthog-suited-bear.ngrok-free.app
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
