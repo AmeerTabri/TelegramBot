@@ -147,7 +147,7 @@ class Img:
                         self.data[x][y] = avg
 
     def predict(self):
-        url = "http://34.213.168.160:8080/predict"
+        url = "http://10.0.1.39:8080/predict"
         with open(self.path, 'rb') as image_file:
             files = {'file': image_file}
             try:

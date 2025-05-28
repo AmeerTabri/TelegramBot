@@ -2,7 +2,7 @@
 name: polybot deploy_dev
 
 on:
-  # The workflow will run when a push is made to branch `main`
+  # The workflow will run when a push is made to branch `dev`
   push:
     branches:
      - dev
