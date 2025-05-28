@@ -1,6 +1,7 @@
 from pathlib import Path
 import random
 import requests
+import os
 
 from matplotlib.image import imread, imsave
 
@@ -147,7 +148,7 @@ class Img:
                         self.data[x][y] = avg
 
     def predict(self):
-        url = "http://10.0.1.39:8080/predict"
+        url = f"http://{os.getenv('EC2_YOLO')}:8080/predict"
         with open(self.path, 'rb') as image_file:
             files = {'file': image_file}
             try:
