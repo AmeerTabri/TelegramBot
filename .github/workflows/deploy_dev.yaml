@@ -5,7 +5,7 @@ on:
   # The workflow will run when a push is made to branch `dev`
   push:
     branches:
-     - dev2
+     - dev
 
   # Allow to run it manually as well from GitHub web
   workflow_dispatch:
@@ -51,7 +51,7 @@ jobs:
 
         run: |
           # Clone repository if it doesn't exist, otherwise pull latest changes
-          ssh ec2 "if [ -d ~/${REPO_NAME} ]; then cd ~/${REPO_NAME} && git fetch origin dev2 && git checkout dev2 && git reset --hard origin/dev2; else git clone --branch dev ${REPO_URL} ~/${REPO_NAME}; fi"
+          ssh ec2 "if [ -d ~/${REPO_NAME} ]; then cd ~/${REPO_NAME} && git fetch origin dev && git checkout dev && git reset --hard origin/dev; else git clone --branch dev ${REPO_URL} ~/${REPO_NAME}; fi"
 
       - name: Execute script on EC2
         run: |
