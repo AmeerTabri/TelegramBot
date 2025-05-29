@@ -41,11 +41,12 @@ for service in telegram_bot ngrok; do
 done
 
 # --- Step 6: Install OpenTelemetry Collector ---
+OTEL_VERSION="0.94.0"
 if ! command -v otelcol &> /dev/null; then
   echo "Installing OpenTelemetry Collector..."
-  wget https://github.com/open-telemetry/opentelemetry-collector-releases/releases/latest/download/otelcol_amd64.deb
-  sudo dpkg -i otelcol_amd64.deb
-  rm otelcol_amd64.deb
+  wget https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v${OTEL_VERSION}/otelcol_${OTEL_VERSION}_amd64.deb
+  sudo dpkg -i otelcol_${OTEL_VERSION}_amd64.deb || { echo "dpkg install failed"; exit 1; }
+  rm otelcol_${OTEL_VERSION}_amd64.deb
 else
   echo "OpenTelemetry Collector already installed."
 fi
