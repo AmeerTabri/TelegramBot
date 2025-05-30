@@ -18,11 +18,10 @@ def index():
 @app.route(f'/{TELEGRAM_BOT_TOKEN}/', methods=['POST'])
 def webhook():
     req = request.get_json()
-    bot.handle_message(req['message'])
+    bot.route(req['message'])
     return 'Ok'
 
 
 if __name__ == "__main__":
-    bot = ImageProcessingBot(TELEGRAM_BOT_TOKEN, BOT_APP_URL)
-
+    bot = Bot(TELEGRAM_BOT_TOKEN, BOT_APP_URL)
     app.run(host='0.0.0.0', port=8443)
