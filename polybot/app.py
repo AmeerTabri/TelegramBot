@@ -23,5 +23,22 @@ def webhook():
 
 
 if __name__ == "__main__":
-    bot = Bot(TELEGRAM_BOT_TOKEN, BOT_APP_URL)
+    import telebot.apihelper
+    import time
+
+    cert_path = "/home/ubuntu/TelegramBot/polybot.crt"
+    bot = ImageProcessingBot(TELEGRAM_BOT_TOKEN, BOT_APP_URL)
+
+    try:
+        # Only set webhook if it's not already set
+        webhook_info = bot.telegram_bot_client.get_webhook_info()
+        if not webhook_info.url or webhook_info.url != f"{BOT_APP_URL}/{TELEGRAM_BOT_TOKEN}/":
+            bot.telegram_bot_client.set_webhook(
+                url=f"{BOT_APP_URL}/{TELEGRAM_BOT_TOKEN}/",
+                certificate=open(cert_path, "r")
+            )
+    except telebot.apihelper.ApiTelegramException as e:
+        print(f"Failed to set webhook: {e}")
+        # Optional: wait and retry or continue without setting it again
+
     app.run(host='0.0.0.0', port=8443)
