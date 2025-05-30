@@ -27,7 +27,7 @@ if __name__ == "__main__":
     import time
 
     cert_path = "/home/ubuntu/TelegramBot/polybot.crt"
-    bot = ImageProcessingBot(TELEGRAM_BOT_TOKEN, BOT_APP_URL)
+    bot = Bot(TELEGRAM_BOT_TOKEN, BOT_APP_URL)
 
     try:
         # Only set webhook if it's not already set
