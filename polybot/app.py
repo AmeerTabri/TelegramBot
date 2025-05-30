@@ -23,7 +23,7 @@ def webhook():
 
 
 if __name__ == "__main__":
-    cert_path = "/home/ubuntu/polybot.crt"
+    cert_path = "/home/ubuntu/TelegramBot/polybot.crt"
     bot = ImageProcessingBot(TELEGRAM_BOT_TOKEN, BOT_APP_URL)
 
     # Set webhook with certificate
@@ -33,3 +33,4 @@ if __name__ == "__main__":
     )
 
     app.run(host='0.0.0.0', port=8443)
+
