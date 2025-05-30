@@ -1,0 +1,13 @@
+[Unit]
+Description=Simple Python Server
+After=network.target
+
+[Service]
+WorkingDirectory=/home/ubuntu/TelegramBot
+ExecStart=/home/ubuntu/TelegramBot/.venv/bin/python -m polybot.app
+EnvironmentFile=/home/ubuntu/TelegramBot/.env.prod
+Environment=APP_ENV=prod
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

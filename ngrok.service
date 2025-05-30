@@ -1,0 +1,13 @@
+[Unit]
+Description=ngrok tunnel
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+ExecStart=/snap/bin/ngrok http --domain=warthog-suited-bear.ngrok-free.app 8443
+Restart=always
+User=ubuntu
+WorkingDirectory=/home/ubuntu
+
+[Install]
+WantedBy=multi-user.target

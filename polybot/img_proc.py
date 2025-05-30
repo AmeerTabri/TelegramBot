@@ -1,6 +1,7 @@
 from pathlib import Path
 import random
 import requests
+import os
 
 from matplotlib.image import imread, imsave
 
@@ -161,4 +162,3 @@ class Img:
         except requests.RequestException as e:
             print("Failed to get prediction:", e)
             return []
-

@@ -1,0 +1,5 @@
+telebot
+matplotlib~=3.10.1
+Flask~=3.1.0
+loguru~=0.7.3
+os
