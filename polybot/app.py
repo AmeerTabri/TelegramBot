@@ -39,7 +39,7 @@ if __name__ == "__main__":
     import telebot.apihelper
     import time
 
-    cert_path = "/home/ubuntu/TelegramBot/polybot/certs/polybot.crt"
+    cert_path = "/home/ubuntu/TelegramBot/polybot.crt"
     bot = ImageProcessingBot(TELEGRAM_BOT_TOKEN, BOT_APP_URL)
 
     try:
