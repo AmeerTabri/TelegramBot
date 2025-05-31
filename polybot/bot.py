@@ -189,6 +189,7 @@ class ImagePredictionBot:
     def handle_image(self, msg, caption='predict'):
         chat_id = msg['chat']['id']
         show_image = 'show' in caption
+        os.makedirs("temp", exist_ok=True)
 
         try:
             file_info = self.bot.get_file(msg['photo'][-1]['file_id'])
