@@ -147,7 +147,7 @@ class Img:
                         self.data[x][y] = avg
 
     def predict(self, chat_id):
-        url = "http://127.0.0.1:8080/predict"
+        url = f"http://{os.getenv('EC2_YOLO')}:8080/predict"
         image_name = self.path.name  # only filename, e.g., photo.jpg
         payload = {
             "image_name": image_name,
