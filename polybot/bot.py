@@ -69,7 +69,7 @@ class QuoteBot(Bot):
 
 
 class ImageProcessingBot:
-    def __init__(self, bot_client):
+    def __init__(self, token=None, telegram_chat_url=None, bot_client=None):
         self.bot = bot_client
 
     def send_filter_list(self, chat_id):
