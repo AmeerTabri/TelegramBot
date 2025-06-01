@@ -24,7 +24,7 @@ def webhook():
 
 if __name__ == "__main__":
     cert_path = "/home/ubuntu/TelegramBot/polybot.crt"
-    bot = ImageProcessingBot(TELEGRAM_BOT_TOKEN, BOT_APP_URL)
+    bot = ImageProcessingBot(token='bot_token', telegram_chat_url='webhook_url')
 
     try:
         webhook_info = bot.telegram_bot_client.get_webhook_info()

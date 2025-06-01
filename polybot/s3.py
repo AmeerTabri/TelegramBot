@@ -3,8 +3,8 @@ import boto3
 
 # AWS_REGION = os.environ["AWS_REGION"]
 # AWS_S3_BUCKET = os.environ["AWS_S3_BUCKET"]
-AWS_REGION="us-east-1"
-AWS_S3_BUCKET="ameer-polybot-images"
+AWS_REGION = "us-east-1"
+AWS_S3_BUCKET = "ameer-polybot-images"
 
 
 s3 = boto3.client('s3', region_name=AWS_REGION)
