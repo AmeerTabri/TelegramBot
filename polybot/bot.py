@@ -1,11 +1,13 @@
-import telebot
-from loguru import logger
 import os
 import time
-from telebot.types import InputFile
-from polybot.img_proc import Img
 import shutil
 from pathlib import Path
+from collections import Counter
+import telebot
+from loguru import logger
+from telebot.types import InputFile
+from polybot.img_proc import Img
+from polybot.s3 import upload_image_to_s3, download_predicted_image_from_s3
 
 
 class Bot:
@@ -183,9 +185,25 @@ class ImageProcessingBot(Bot):
                         parts = caption.split()
                         level = int(parts[1]) if len(parts) > 1 and parts[1].isdigit() else 10
                         img.pixelate(level)
-                    elif caption == 'predict':
-                        predictions = img.predict()
+                    elif caption.startswith('predict'):
+                        show_image = 'show' in caption
+                        predictions = img.predict(chat_id)
                         self.send_text(chat_id, f"Predictions = {predictions}")
+
+                        # Upload original to S3
+                        from pathlib import Path
+                        s3_key = f"{chat_id}/original/{Path(img_path).name}"
+                        upload_image_to_s3(img_path, s3_key)
+
+                        if show_image:
+                            predicted_path = f"temp/{chat_id}_predicted{Path(img_path).suffix}"
+                            try:
+                                download_predicted_image_from_s3(chat_id, Path(img_path).name, predicted_path)
+                                self.send_photo(chat_id, predicted_path)
+                                os.remove(predicted_path)
+                            except Exception as e:
+                                logger.warning(f"Could not fetch predicted image from S3: {e}")
+
                         return
                     else:
                         self.send_text(chat_id, f"Invalid filter: {caption}\nFor the filters list type: captions")
@@ -202,13 +220,3 @@ class ImageProcessingBot(Bot):
         except Exception as e:
             logger.error(f"Error processing image: {e}")
             self.send_text(chat_id, "Something went wrong... please try again.")
-
-
-class ImagePredictionBot(Bot):
-    def send_ai_list(self, chat_id):
-        yolo_list = (
-            "The Available AI features Are:\n"
-            "*predict*: list the objects of the picture"
-        )
-        self.telegram_bot_client.send_message(chat_id, yolo_list, parse_mode='Markdown')
-
