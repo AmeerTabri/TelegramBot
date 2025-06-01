@@ -12,14 +12,18 @@ from polybot.s3 import upload_image_to_s3, download_predicted_image_from_s3
 
 class Bot:
     def __init__(self, token, telegram_chat_url):
-        self.telegram_bot_client = telebot.TeleBot(token)
-        self.telegram_bot_client.remove_webhook()
-        time.sleep(0.5)
-        self.telegram_bot_client.set_webhook(url=f'{telegram_chat_url}/{token}/', timeout=60)
-        logger.info(f'Telegram Bot information\n\n{self.telegram_bot_client.get_me()}')
+        self.telegram_bot_client = telebot.TeleBot(token) if token else None
 
-        self.processor = ImageProcessingBot(self.telegram_bot_client)
-        self.predictor = ImagePredictionBot(self.telegram_bot_client)
+        if self.telegram_bot_client:
+            self.telegram_bot_client.remove_webhook()
+            time.sleep(0.5)
+            self.telegram_bot_client.set_webhook(url=f'{telegram_chat_url}/{token}/', timeout=60)
+            logger.info(f'Telegram Bot information\n\n{self.telegram_bot_client.get_me()}')
+
+        self.processor = ImageProcessingBot(bot_client=self.telegram_bot_client)
+        self.predictor = ImagePredictionBot(bot_client=self.telegram_bot_client)
+
+
 
     def route(self, msg):
         chat_id = msg['chat']['id']
