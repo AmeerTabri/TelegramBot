@@ -1,21 +1,12 @@
-<<<<<<< HEAD
-import telebot
-from collections import Counter
-from loguru import logger
-=======
->>>>>>> feature/user_upload_images_to_s3
 import os
 import time
 import shutil
 from pathlib import Path
-<<<<<<< HEAD
-=======
 from collections import Counter
 import telebot
 from loguru import logger
 from telebot.types import InputFile
 from polybot.img_proc import Img
->>>>>>> feature/user_upload_images_to_s3
 from polybot.s3 import upload_image_to_s3, download_predicted_image_from_s3
 
 
@@ -119,81 +110,27 @@ class ImageProcessingBot:
                 return
 
             for caption in captions:
-<<<<<<< HEAD
-                if caption == 'concat1':
-                    user_dir = Path(f'temp/{chat_id}')
-                    user_dir.mkdir(parents=True, exist_ok=True)
-                    saved_path = img.save_img()
-                    shutil.copy(saved_path, user_dir / 'first_img.jpg')
-                    self.bot.send_message(chat_id, "Send the second image with the direction.")
-                    os.remove(saved_path)
-                    os.remove(img_path)
-                    return
-
-                if caption.startswith('concat2'):
-                    parts = caption.split()
-                    direction = parts[1] if len(parts) > 1 else 'horizontal'
-                    first_img_path = Path(f'temp/{chat_id}/first_img.jpg')
-                    if not first_img_path.exists():
-                        self.bot.send_message(chat_id, "First image not found.")
-                        return
-                    first_img = Img(str(first_img_path))
-                    img.concat(first_img, direction)
-                    first_img_path.unlink(missing_ok=True)
-                    continue
-
-                if caption.startswith('blur'):
-                    parts = caption.split()
-                    level = int(parts[1]) if len(parts) > 1 and parts[1].isdigit() else 16
-                    img.blur(level)
-                elif caption == 'contour':
-                    img.contour()
-                elif caption == 'rotate':
-                    img.rotate()
-                elif caption == 'segment':
-                    img.segment()
-                elif caption == 'salt and pepper':
-                    img.salt_n_pepper()
-                elif caption.startswith('concat'):
-                    parts = caption.split()
-                    direction = parts[1] if len(parts) > 1 and parts[1] in ['horizontal', 'vertical'] else 'horizontal'
-                    img.concat(img, direction)
-                elif caption.startswith('flip'):
-                    parts = caption.split()
-                    direction = parts[1] if len(parts) > 1 else 'vertical'
-                    img.flip(direction)
-                elif caption == 'invert':
-                    img.invert()
-                elif caption == 'binary':
-                    img.binary()
-                elif caption.startswith('pixel'):
-                    parts = caption.split()
-                    level = int(parts[1]) if len(parts) > 1 and parts[1].isdigit() else 10
-                    img.pixelate(level)
-                else:
-                    self.bot.send_message(chat_id, f"Invalid filter: {caption}")
-=======
                 try:
                     if caption == 'concat1':
                         user_dir = Path(f'temp/{chat_id}')
                         user_dir.mkdir(parents=True, exist_ok=True)
                         saved_path = img.save_img()
-                        first_img_path = user_dir / 'first_img.jpg'
-                        shutil.copy(saved_path, first_img_path)
-                        self.send_text(chat_id, "Send the second image with direction.")
+                        shutil.copy(saved_path, user_dir / 'first_img.jpg')
+                        self.bot.send_message(chat_id, "Send the second image with the direction.")
+                        os.remove(saved_path)
+                        os.remove(img_path)
                         return
 
-                    elif caption.startswith('concat2'):
+                    if caption.startswith('concat2'):
                         parts = caption.split()
-                        direction = parts[1] if len(parts) > 1 and parts[1] in ['horizontal', 'vertical'] else 'horizontal'
+                        direction = parts[1] if len(parts) > 1 else 'horizontal'
                         first_img_path = Path(f'temp/{chat_id}/first_img.jpg')
                         if not first_img_path.exists():
-                            self.send_text(chat_id, "First image not found. Please send the first image.")
+                            self.bot.send_message(chat_id, "First image not found.")
                             return
-
                         first_img = Img(str(first_img_path))
                         img.concat(first_img, direction)
-                        first_img_path.unlink()
+                        first_img_path.unlink(missing_ok=True)
                         continue
 
                     if caption.startswith('blur'):
@@ -214,7 +151,7 @@ class ImageProcessingBot:
                         img.concat(img, direction)
                     elif caption.startswith('flip'):
                         parts = caption.split()
-                        direction = parts[1] if len(parts) > 1 and parts[1] in ['horizontal', 'vertical'] else 'vertical'
+                        direction = parts[1] if len(parts) > 1 else 'vertical'
                         img.flip(direction)
                     elif caption == 'invert':
                         img.invert()
@@ -227,10 +164,8 @@ class ImageProcessingBot:
                     elif caption.startswith('predict'):
                         show_image = 'show' in caption
                         predictions = img.predict(chat_id)
-                        self.send_text(chat_id, f"Predictions = {predictions}")
+                        self.bot.send_message(chat_id, f"Predictions = {predictions}")
 
-                        # Upload original to S3
-                        from pathlib import Path
                         s3_key = f"{chat_id}/original/{Path(img_path).name}"
                         upload_image_to_s3(img_path, s3_key)
 
@@ -238,18 +173,17 @@ class ImageProcessingBot:
                             predicted_path = f"temp/{chat_id}_predicted{Path(img_path).suffix}"
                             try:
                                 download_predicted_image_from_s3(chat_id, Path(img_path).name, predicted_path)
-                                self.send_photo(chat_id, predicted_path)
+                                self.bot.send_photo(chat_id, InputFile(predicted_path))
                                 os.remove(predicted_path)
                             except Exception as e:
                                 logger.warning(f"Could not fetch predicted image from S3: {e}")
 
                         return
                     else:
-                        self.send_text(chat_id, f"Invalid filter: {caption}\nFor the filters list type: captions")
+                        self.bot.send_message(chat_id, f"Invalid filter: {caption}")
                         return
                 except RuntimeError as e:
-                    self.send_text(chat_id, f"Error: {str(e)}")
->>>>>>> feature/user_upload_images_to_s3
+                    self.bot.send_message(chat_id, f"Error: {str(e)}")
                     return
 
             processed_path = img.save_img()
@@ -258,7 +192,6 @@ class ImageProcessingBot:
             os.remove(img_path)
 
         except Exception as e:
-<<<<<<< HEAD
             logger.error(f"ImageProcessingBot error: {e}")
             self.bot.send_message(chat_id, "Error processing image.")
 
@@ -315,7 +248,3 @@ class ImagePredictionBot:
         except Exception as e:
             logger.error(f"ImagePredictionBot error: {e}")
             self.bot.send_message(chat_id, "Prediction failed.")
-=======
-            logger.error(f"Error processing image: {e}")
-            self.send_text(chat_id, "Something went wrong... please try again.")
->>>>>>> feature/user_upload_images_to_s3
