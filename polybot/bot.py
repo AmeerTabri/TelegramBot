@@ -23,6 +23,18 @@ class Bot:
         self.processor = ImageProcessingBot(bot_client=self.telegram_bot_client)
         self.predictor = ImagePredictionBot(bot_client=self.telegram_bot_client)
 
+    @property
+    def telegram_bot_client(self):
+        return self._telegram_bot_client
+
+    @telegram_bot_client.setter
+    def telegram_bot_client(self, value):
+        self._telegram_bot_client = value
+        if hasattr(self, 'processor'):
+            self.processor.bot = value
+        if hasattr(self, 'predictor'):
+            self.predictor.bot = value
+
 
 
     def route(self, msg):
