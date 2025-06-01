@@ -37,9 +37,9 @@ class Bot:
 
         caption = msg.get('caption', '').strip().lower()
         if caption.startswith('predict'):
-            self.predictor.handle_image(msg, caption)
+            self.predictor.handle_message(msg, caption)
         else:
-            self.processor.handle_image(msg)
+            self.processor.handle_message(msg)
 
     def is_current_msg_photo(self, msg):
         return 'photo' in msg
@@ -91,7 +91,7 @@ class ImageProcessingBot:
         )
         self.bot.send_message(chat_id, filters, parse_mode='Markdown')
 
-    def handle_image(self, msg):
+    def handle_message(self, msg):
         chat_id = msg['chat']['id']
         try:
             file_info = self.bot.get_file(msg['photo'][-1]['file_id'])
@@ -186,7 +186,7 @@ class ImagePredictionBot:
         )
         self.bot.send_message(chat_id, text, parse_mode='Markdown')
 
-    def handle_image(self, msg, caption='predict'):
+    def handle_message(self, msg, caption='predict'):
         chat_id = msg['chat']['id']
         show_image = 'show' in caption
 
