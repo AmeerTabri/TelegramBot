@@ -211,3 +211,4 @@ class ImagePredictionBot(Bot):
             "*predict*: list the objects of the picture"
         )
         self.telegram_bot_client.send_message(chat_id, yolo_list, parse_mode='Markdown')
+
