@@ -43,6 +43,10 @@ jobs:
           echo "EC2_YOLO=10.0.1.171" >> .env.prod
           echo "AWS_REGION=us-east-1" >> .env.prod
 
+      - name: Upload .env.prod to EC2
+        run: |
+          scp -o StrictHostKeyChecking=no -i ~/.ssh/private_key .env.prod ec2:/home/ubuntu/${REPO_NAME}/.env.prod
+
       - name: Copy repo to EC2
         run: |
           ssh ec2 "if [ -d ~/${REPO_NAME} ]; then cd ~/${REPO_NAME} && git fetch origin main && git checkout main && git reset --hard origin/main; else git clone --branch main ${REPO_URL} ~/${REPO_NAME}; fi"
