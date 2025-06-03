@@ -34,7 +34,7 @@ if __name__ == "__main__":
         if not webhook_info.url or webhook_info.url != f"{BOT_APP_URL}/{TELEGRAM_BOT_TOKEN}/":
             bot.telegram_bot_client.set_webhook(
                 url=f"{BOT_APP_URL}/{TELEGRAM_BOT_TOKEN}/",
-                certificate=open(cert_path, "r")
+                certificate=open(cert_path, "rb")
             )
     except telebot.apihelper.ApiTelegramException as e:
         print(f"Failed to set webhook: {e}")
