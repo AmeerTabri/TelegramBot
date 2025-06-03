@@ -44,13 +44,13 @@ jobs:
           echo "EC2_YOLO=10.0.1.195" >> .env.dev
           echo "AWS_REGION=us-east-1" >> .env.dev
 
-      - name: Upload .env.dev to EC2
-        run: |
-          scp -o StrictHostKeyChecking=no -i ~/.ssh/private_key .env.dev ec2:/home/ubuntu/${REPO_NAME}/.env.dev
-
       - name: Copy script to EC2
         run: |
           ssh ec2 "if [ -d ~/${REPO_NAME} ]; then cd ~/${REPO_NAME} && git fetch origin dev && git checkout dev && git reset --hard origin/dev; else git clone --branch dev ${REPO_URL} ~/${REPO_NAME}; fi"
+
+      - name: Upload .env.dev to EC2
+        run: |
+          scp -o StrictHostKeyChecking=no -i ~/.ssh/private_key .env.dev ec2:/home/ubuntu/${REPO_NAME}/.env.dev
 
       - name: Execute script on EC2
         run: |
