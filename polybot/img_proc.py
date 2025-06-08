@@ -13,7 +13,6 @@ def rgb2gray(rgb):
 
 
 class Img:
-
     def __init__(self, path):
         """
         Do not change the constructor implementation
@@ -147,15 +146,19 @@ class Img:
                     for y in range(j, min(j + pixelate_level, m)):
                         self.data[x][y] = avg
 
-    def predict(self):
+    def predict(self, chat_id):
         url = f"http://{os.getenv('EC2_YOLO')}:8080/predict"
-        with open(self.path, 'rb') as image_file:
-            files = {'file': image_file}
-            try:
-                response = requests.post(url, files=files)
-                response.raise_for_status()
-                data = response.json()
-                return data.get("labels", [])
-            except requests.RequestException as e:
-                print("Failed to get prediction:", e)
-                return []
+        image_name = self.path.name  # only filename, e.g., photo.jpg
+        payload = {
+            "image_name": image_name,
+            "chat_id": str(chat_id)
+        }
+
+        try:
+            response = requests.post(url, json=payload)
+            response.raise_for_status()
+            data = response.json()
+            return data.get("labels", [])
+        except requests.RequestException as e:
+            print("Failed to get prediction:", e)
+            return []

@@ -1,32 +1,21 @@
-# The name of the workflow
 name: polybot deploy_dev
 
 on:
-  # The workflow will run when a push is made to branch `dev`
   push:
     branches:
-     - dev
+      - dev
 
-  # Allow to run it manually as well from GitHub web
   workflow_dispatch:
 
-# Environment variables
 env:
-  # The URL of the GitHub repository, taken from GitHub context variables
   REPO_URL: ${{ github.server_url }}/${{ github.repository }}.git
-  # The name of the repository without owner, taken from GitHub context variables
   REPO_NAME: ${{ github.event.repository.name }}
 
-# A workflow run is made up of one or more jobs. By default, different jobs are running concurrently
 jobs:
-  # This is a job named `deploy_dev`
   deploy_dev:
-    # The type of machine to run the job on
     runs-on: ubuntu-latest
 
-    # A job contains a sequence of tasks called steps
     steps:
-      # The first step, named **Checkout code**,
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -47,11 +36,21 @@ jobs:
               StrictHostKeyChecking no
           EOF
 
-      - name: Copy script to EC2
-
+      - name: Create .env.dev from secrets and constants
         run: |
-          # Clone repository if it doesn't exist, otherwise pull latest changes
+          echo "TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN_DEV }}" > .env.dev
+          echo "AWS_S3_BUCKET=${{ secrets.AWS_S3_BUCKET_DEV }}" >> .env.dev
+          echo "BOT_APP_URL=https://dev.ameer.fursa.click" >> .env.dev
+          echo "EC2_YOLO=10.0.1.195" >> .env.dev
+          echo "AWS_REGION=us-east-1" >> .env.dev
+
+      - name: Copy script to EC2
+        run: |
           ssh ec2 "if [ -d ~/${REPO_NAME} ]; then cd ~/${REPO_NAME} && git fetch origin dev && git checkout dev && git reset --hard origin/dev; else git clone --branch dev ${REPO_URL} ~/${REPO_NAME}; fi"
+
+      - name: Upload .env.dev to EC2
+        run: |
+          scp -o StrictHostKeyChecking=no -i ~/.ssh/private_key .env.dev ec2:/home/ubuntu/${REPO_NAME}/.env.dev
 
       - name: Execute script on EC2
         run: |

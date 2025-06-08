@@ -1,32 +1,28 @@
 import flask
 from flask import request
 import os
+import time
+import telebot.apihelper
 from polybot.bot import Bot, QuoteBot, ImageProcessingBot
-
 
 app = flask.Flask(__name__)
 
 TELEGRAM_BOT_TOKEN = os.environ['TELEGRAM_BOT_TOKEN']
 BOT_APP_URL = os.environ['BOT_APP_URL']
 
-
 @app.route('/', methods=['GET'])
 def index():
     return 'Ok'
 
-
 @app.route(f'/{TELEGRAM_BOT_TOKEN}/', methods=['POST'])
 def webhook():
     req = request.get_json()
-    bot.handle_message(req['message'])
+    bot.route(req['message'])
     return 'Ok'
 
-
 if __name__ == "__main__":
-    import telebot.apihelper
-
     cert_path = "/home/ubuntu/TelegramBot/polybot.crt"
-    bot = ImageProcessingBot(TELEGRAM_BOT_TOKEN, BOT_APP_URL)
+    bot = Bot(TELEGRAM_BOT_TOKEN, BOT_APP_URL)
 
     try:
         # Only set webhook if it's not already set
