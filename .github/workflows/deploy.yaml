@@ -1,9 +1,10 @@
-name: polybot Deploy
+name: polybot deploy_main
 
 on:
   push:
     branches:
       - main
+
   workflow_dispatch:
 
 env:
@@ -11,7 +12,7 @@ env:
   REPO_NAME: ${{ github.event.repository.name }}
 
 jobs:
-  Deploy:
+  deploy_main:
     runs-on: ubuntu-latest
 
     steps:
@@ -43,7 +44,7 @@ jobs:
           echo "EC2_YOLO=10.0.1.171" >> .env.prod
           echo "AWS_REGION=us-east-1" >> .env.prod
 
-      - name: Copy repo to EC2
+      - name: Copy script to EC2
         run: |
           ssh ec2 "if [ -d ~/${REPO_NAME} ]; then cd ~/${REPO_NAME} && git fetch origin main && git checkout main && git reset --hard origin/main; else git clone --branch main ${REPO_URL} ~/${REPO_NAME}; fi"
 
@@ -51,6 +52,6 @@ jobs:
         run: |
           scp -o StrictHostKeyChecking=no -i ~/.ssh/private_key .env.prod ec2:/home/ubuntu/${REPO_NAME}/.env.prod
 
-      - name: Execute deploy script on EC2
+      - name: Execute script on EC2
         run: |
           ssh ec2 "cd $REPO_NAME && bash deploy.sh"
