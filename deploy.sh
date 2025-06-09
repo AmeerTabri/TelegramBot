@@ -2,6 +2,11 @@
 
 cd ~/TelegramBot
 
+# Step 0: Ensure Python 3, pip, and venv are installed
+echo "Checking Python and pip..."
+sudo apt update
+sudo apt install -y python3 python3-pip python3-venv
+
 # Step 1: Create venv if it doesn't exist
 if [ ! -d ".venv" ]; then
   echo "Creating virtual environment..."
