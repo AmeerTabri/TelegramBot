@@ -41,7 +41,6 @@ for service in telegram_bot_dev; do
   fi
 done
 
-
 # --- Step 6: Install OpenTelemetry Collector ---
 if ! command -v otelcol &> /dev/null; then
   echo "Installing OpenTelemetry Collector..."
@@ -92,4 +91,3 @@ if ! systemctl is-active --quiet otelcol; then
   exit 1
 else
   echo "✅ otelcol service is running and exposing metrics on port 8889."
-fi
