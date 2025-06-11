@@ -6,6 +6,13 @@ on:
       image:
         required: true
         type: string
+    secrets:
+      EC2_DEV_HOST:
+        required: true
+      EC2_USERNAME:
+        required: true
+      EC2_SSH_KEY:
+        required: true
 
 jobs:
   deploy_dev:
