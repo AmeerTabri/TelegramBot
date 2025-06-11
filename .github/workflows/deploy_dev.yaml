@@ -76,11 +76,11 @@ jobs:
         run: |
           scp -o StrictHostKeyChecking=no -i ~/.ssh/private_key .env.dev ec2:/home/ubuntu/TelegramBot/.env.dev
 
-      - name: Clone or update TelegramBot repo on EC2
+      - name: Clone TelegramBot repo fresh
         env:
           REPO_URL: ${{ github.server_url }}/${{ github.repository }}.git
         run: |
-          ssh ec2 "if [ -d ~/TelegramBot ]; then cd ~/TelegramBot && git fetch origin dev && git checkout dev && git reset --hard origin/dev; else git clone --branch dev $REPO_URL ~/TelegramBot; fi"
+          ssh ec2 "rm -rf ~/TelegramBot && git clone --branch dev $REPO_URL ~/TelegramBot"
 
       - name: Deploy using Docker Compose
         run: |
