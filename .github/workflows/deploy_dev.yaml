@@ -43,10 +43,6 @@ jobs:
               StrictHostKeyChecking no
           EOF
 
-      - name: Debug image input
-        run: |
-          echo "Deploying image: ${{ inputs.image }}"
-
       - name: Create .env.dev with image and secrets
         run: |
           echo "IMG_NAME=${{ inputs.image }}" > .env.dev
