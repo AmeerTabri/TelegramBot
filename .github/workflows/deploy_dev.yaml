@@ -45,7 +45,7 @@ jobs:
 
       - name: Create .env.dev with image and secrets
         run: |
-          echo "IMG_NAME=${{ inputs.image }}" > .env.dev
+          echo "TAG=${{ github.run_number }}" > .env.dev 
           echo "TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}" >> .env.dev
           echo "AWS_S3_BUCKET=${{ secrets.AWS_S3_BUCKET }}" >> .env.dev
           echo "BOT_APP_URL=https://dev.ameer.fursa.click" >> .env.dev
