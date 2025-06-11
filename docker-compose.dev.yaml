@@ -3,6 +3,6 @@ services:
     image: ameertabri/polybot-dev:${TAG}
     restart: always
     env_file:
-      - .env.dev
+      - .env
     ports:
       - "8443:8443"
