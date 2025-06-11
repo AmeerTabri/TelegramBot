@@ -1,5 +1,5 @@
 services:
-  polybot:
+  polybot-dev:
     image: ameertabri/polybot-dev:${TAG}
     restart: always
     env_file:
