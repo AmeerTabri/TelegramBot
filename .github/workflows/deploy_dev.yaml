@@ -1,22 +1,18 @@
-name: polybot deploy_dev
+name: Polybot Deploy Dev
 
 on:
-  push:
-    branches:
-      - dev
-
-  workflow_dispatch:
-
-env:
-  REPO_URL: ${{ github.server_url }}/${{ github.repository }}.git
-  REPO_NAME: ${{ github.event.repository.name }}
+  workflow_call:
+    inputs:
+      image:
+        required: true
+        type: string
 
 jobs:
   deploy_dev:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout repo
         uses: actions/checkout@v4
 
       - name: Configure SSH
@@ -36,22 +32,24 @@ jobs:
               StrictHostKeyChecking no
           EOF
 
-      - name: Create .env.dev from secrets and constants
+      - name: Create .env.dev with image and secrets
         run: |
-          echo "TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN_DEV }}" > .env.dev
+          echo "IMG_NAME=${{ inputs.image }}" > .env.dev
+          echo "TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN_DEV }}" >> .env.dev
           echo "AWS_S3_BUCKET=${{ secrets.AWS_S3_BUCKET_DEV }}" >> .env.dev
           echo "BOT_APP_URL=https://dev.ameer.fursa.click" >> .env.dev
           echo "EC2_YOLO=10.0.1.195" >> .env.dev
           echo "AWS_REGION=us-east-1" >> .env.dev
 
-      - name: Copy script to EC2
-        run: |
-          ssh ec2 "if [ -d ~/${REPO_NAME} ]; then cd ~/${REPO_NAME} && git fetch origin dev && git checkout dev && git reset --hard origin/dev; else git clone --branch dev ${REPO_URL} ~/${REPO_NAME}; fi"
-
       - name: Upload .env.dev to EC2
         run: |
-          scp -o StrictHostKeyChecking=no -i ~/.ssh/private_key .env.dev ec2:/home/ubuntu/${REPO_NAME}/.env.dev
+          scp -o StrictHostKeyChecking=no -i ~/.ssh/private_key .env.dev ec2:/home/ubuntu/Polybot/.env
 
-      - name: Execute script on EC2
+      - name: Deploy using Docker Compose
         run: |
-          ssh ec2 "cd $REPO_NAME && bash deploy_dev.sh"
+          ssh ec2 << 'EOF'
+            cd ~/Polybot
+            docker compose -f docker-compose.dev.yaml pull
+            docker compose -f docker-compose.dev.yaml down
+            docker compose -f docker-compose.dev.yaml up -d
+          EOF
