@@ -38,5 +38,6 @@ jobs:
       EC2_HOST: ${{ secrets.EC2_DEV_HOST }}
       EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
       EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+      EC2_YOLO: ${{ secrets.EC2_DEV_YOLO }}
       TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN_DEV }}
       AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET_DEV }}
