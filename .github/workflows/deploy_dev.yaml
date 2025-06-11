@@ -55,7 +55,7 @@ jobs:
       - name: Deploy using Docker Compose
         run: |
           ssh ec2 << 'EOF'
-            cd ~/Polybot
+            cd ~/TelegramBot
             docker compose -f docker-compose.dev.yaml pull
             docker compose -f docker-compose.dev.yaml down
             docker compose -f docker-compose.dev.yaml up -d
