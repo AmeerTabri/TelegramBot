@@ -54,7 +54,7 @@ jobs:
 
       - name: Upload .env.dev to EC2
         run: |
-          scp -o StrictHostKeyChecking=no -i ~/.ssh/private_key .env.dev ec2:/home/ubuntu/TelegramBot/.env
+          scp -o StrictHostKeyChecking=no -i ~/.ssh/private_key .env.dev ec2:/home/ubuntu/TelegramBot/.env.prod
 
       - name: Clone or update TelegramBot repo on EC2
         env:
