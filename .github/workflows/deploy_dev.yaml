@@ -7,11 +7,15 @@ on:
         required: true
         type: string
     secrets:
-      EC2_DEV_HOST:
+      EC2_HOST:
         required: true
       EC2_USERNAME:
         required: true
       EC2_SSH_KEY:
+        required: true
+      TELEGRAM_BOT_TOKEN:
+        required: true
+      AWS_S3_BUCKET:
         required: true
 
 jobs:
@@ -25,7 +29,7 @@ jobs:
       - name: Configure SSH
         env:
           SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
-          EC2_DEV_HOST: ${{ secrets.EC2_DEV_HOST }}
+          EC2_HOST: ${{ secrets.EC2_HOST }}
           EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
         run: |
           mkdir -p ~/.ssh
@@ -33,7 +37,7 @@ jobs:
           chmod 600 ~/.ssh/private_key
           cat > ~/.ssh/config << EOF
           Host ec2
-              HostName $EC2_DEV_HOST
+              HostName $EC2_HOST
               User $EC2_USERNAME
               IdentityFile ~/.ssh/private_key
               StrictHostKeyChecking no
@@ -42,8 +46,8 @@ jobs:
       - name: Create .env.dev with image and secrets
         run: |
           echo "IMG_NAME=${{ inputs.image }}" > .env.dev
-          echo "TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN_DEV }}" >> .env.dev
-          echo "AWS_S3_BUCKET=${{ secrets.AWS_S3_BUCKET_DEV }}" >> .env.dev
+          echo "TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}" >> .env.dev
+          echo "AWS_S3_BUCKET=${{ secrets.AWS_S3_BUCKET }}" >> .env.dev
           echo "BOT_APP_URL=https://dev.ameer.fursa.click" >> .env.dev
           echo "EC2_YOLO=10.0.1.195" >> .env.dev
           echo "AWS_REGION=us-east-1" >> .env.dev
