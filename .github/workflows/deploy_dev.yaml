@@ -76,7 +76,7 @@ jobs:
         env:
           REPO_URL: ${{ github.server_url }}/${{ github.repository }}.git
         run: |
-          ssh ec2 "rm -rf ~/TelegramBot && git clone --branch dev $REPO_URL ~/TelegramBot"
+          ssh ec2 "sudo rm -rf ~/TelegramBot && git clone --branch dev $REPO_URL ~/TelegramBot"
 
       - name: Upload .env.dev to EC2
         run: | 
