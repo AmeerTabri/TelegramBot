@@ -1,9 +1,8 @@
-version: '3.8'
-
 services:
   polybot:
-    image: ameertabri/polybot-dev:latest
+    image: ameertabri/polybot-dev:${TAG}
     restart: always
-    env_file: .env
+    env_file:
+      - .env
     ports:
       - "8443:8443"
