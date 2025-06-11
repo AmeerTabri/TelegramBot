@@ -1,22 +1,29 @@
-name: polybot deploy_main
+name: Polybot Deploy
 
 on:
-  push:
-    branches:
-      - main
-
-  workflow_dispatch:
-
-env:
-  REPO_URL: ${{ github.server_url }}/${{ github.repository }}.git
-  REPO_NAME: ${{ github.event.repository.name }}
+  workflow_call:
+    inputs:
+      image:
+        required: true
+        type: string
+    secrets:
+      EC2_HOST:
+        required: true
+      EC2_USERNAME:
+        required: true
+      EC2_SSH_KEY:
+        required: true
+      TELEGRAM_BOT_TOKEN:
+        required: true
+      AWS_S3_BUCKET:
+        required: true
 
 jobs:
-  deploy_main:
+  deploy_prod:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout repo
         uses: actions/checkout@v4
 
       - name: Configure SSH
@@ -36,22 +43,50 @@ jobs:
               StrictHostKeyChecking no
           EOF
 
-      - name: Create .env.prod from secrets and constants
+      - name: Install Docker on EC2
         run: |
-          echo "TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}" > .env.prod
+          ssh ec2 << 'EOF'
+            sudo apt-get update
+            sudo apt-get install -y ca-certificates curl gnupg
+            sudo install -m 0755 -d /etc/apt/keyrings
+            curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo tee /etc/apt/keyrings/docker.asc > /dev/null
+            sudo chmod a+r /etc/apt/keyrings/docker.asc
+            echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu jammy stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+            sudo apt-get update
+            sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+            sudo systemctl enable docker
+            sudo systemctl start docker
+            sudo usermod -aG docker $USER
+          EOF
+
+      - name: Create .env.prod with image and secrets
+        run: |
+          echo "TAG=${{ github.run_number }}" > .env.prod 
+          echo "TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}" >> .env.prod
           echo "AWS_S3_BUCKET=${{ secrets.AWS_S3_BUCKET }}" >> .env.prod
           echo "BOT_APP_URL=https://ameer.fursa.click" >> .env.prod
-          echo "EC2_YOLO=10.0.1.171" >> .env.prod
+          echo "EC2_YOLO=10.0.1.195" >> .env.prod
           echo "AWS_REGION=us-east-1" >> .env.prod
 
-      - name: Copy script to EC2
+      - name: Create the main directory
         run: |
-          ssh ec2 "if [ -d ~/${REPO_NAME} ]; then cd ~/${REPO_NAME} && git fetch origin main && git checkout main && git reset --hard origin/main; else git clone --branch main ${REPO_URL} ~/${REPO_NAME}; fi"
+          ssh ec2 "mkdir -p /home/ubuntu/TelegramBot"
+
+      - name: Clone TelegramBot repo fresh
+        env:
+          REPO_URL: ${{ github.server_url }}/${{ github.repository }}.git
+        run: |
+          ssh ec2 "sudo rm -rf ~/TelegramBot && git clone --branch main $REPO_URL ~/TelegramBot"
 
       - name: Upload .env.prod to EC2
-        run: |
-          scp -o StrictHostKeyChecking=no -i ~/.ssh/private_key .env.prod ec2:/home/ubuntu/${REPO_NAME}/.env.prod
+        run: | 
+          scp -o StrictHostKeyChecking=no -i ~/.ssh/private_key .env.prod ec2:/home/ubuntu/TelegramBot/.env
 
-      - name: Execute script on EC2
+      - name: Deploy using Docker Compose
         run: |
-          ssh ec2 "cd $REPO_NAME && bash deploy.sh"
+          ssh ec2 << 'EOF'
+            cd ~/TelegramBot
+            docker compose -f docker-compose.yaml down --remove-orphans
+            docker compose -f docker-compose.yaml pull
+            docker compose -f docker-compose.yaml up -d
+          EOF
