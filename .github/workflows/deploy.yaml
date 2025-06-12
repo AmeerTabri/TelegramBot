@@ -40,8 +40,8 @@ jobs:
         run: |
           echo "TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}" > .env.prod
           echo "AWS_S3_BUCKET=${{ secrets.AWS_S3_BUCKET }}" >> .env.prod
+          echo "EC2_YOLO=${{ secrets.EC2_YOLO }}" >> .env.prod
           echo "BOT_APP_URL=https://ameer.fursa.click" >> .env.prod
-          echo "EC2_YOLO=10.0.1.171" >> .env.prod
           echo "AWS_REGION=us-east-1" >> .env.prod
 
       - name: Copy script to EC2
