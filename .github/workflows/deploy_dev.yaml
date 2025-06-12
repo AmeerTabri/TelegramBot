@@ -66,8 +66,8 @@ jobs:
           echo "TAG=${{ github.run_number }}" > .env.dev 
           echo "TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}" >> .env.dev
           echo "AWS_S3_BUCKET=${{ secrets.AWS_S3_BUCKET }}" >> .env.dev
-          echo "BOT_APP_URL=https://dev.ameer.fursa.click" >> .env.dev
-          echo "EC2_YOLO=10.0.1.195" >> .env.dev
+          echo "EC2_YOLO=${{ secrets.EC2_YOLO }}" >> .env.dev
+          echo "BOT_APP_URL=https://dev.ameer.fursa.click" >> .env.dev 
           echo "AWS_REGION=us-east-1" >> .env.dev
 
       - name: Create the main directory
