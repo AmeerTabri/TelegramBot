@@ -69,8 +69,17 @@ class QuoteBot(Bot):
 
 
 class ImageProcessingBot:
-    def __init__(self, bot_client):
-        self.bot = bot_client
+    def __init__(self, bot_client=None, token=None, telegram_chat_url=None):
+        if bot_client:
+            self.bot = bot_client
+        elif token and telegram_chat_url:
+            import telebot
+            self.bot = telebot.TeleBot(token)
+            self.bot.remove_webhook()
+            time.sleep(0.5)
+            self.bot.set_webhook(url=f'{telegram_chat_url}/{token}/', timeout=60)
+        else:
+            raise ValueError("Provide either bot_client or (token and telegram_chat_url)")
 
     def send_filter_list(self, chat_id):
         filters = (
