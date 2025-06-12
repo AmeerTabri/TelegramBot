@@ -1,4 +1,4 @@
-name: Polybot Deploy Dev
+name: Polybot Deploy
 
 on:
   workflow_call:
@@ -21,7 +21,7 @@ on:
         required: true
 
 jobs:
-  deploy_dev:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -61,14 +61,14 @@ jobs:
             sudo usermod -aG docker $USER
           EOF
 
-      - name: Create .env.dev with image and secrets
+      - name: Create .env.prod with image and secrets
         run: |
-          echo "TAG=${{ github.run_number }}" > .env.dev 
-          echo "TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}" >> .env.dev
-          echo "AWS_S3_BUCKET=${{ secrets.AWS_S3_BUCKET }}" >> .env.dev
-          echo "BOT_APP_URL=https://dev.ameer.fursa.click" >> .env.dev
-          echo "EC2_YOLO=10.0.1.195" >> .env.dev
-          echo "AWS_REGION=us-east-1" >> .env.dev
+          echo "TAG=${{ github.run_number }}" > .env.prod
+          echo "TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}" >> .env.prod
+          echo "AWS_S3_BUCKET=${{ secrets.AWS_S3_BUCKET }}" >> .env.prod
+          echo "BOT_APP_URL=https://ameer.fursa.click" >> .env.prod
+          echo "EC2_YOLO=${{ secrets.EC2_YOLO }}" >> .env.prod
+          echo "AWS_REGION=us-east-1" >> .env.prod
 
       - name: Create the main directory
         run: |
@@ -78,17 +78,17 @@ jobs:
         env:
           REPO_URL: ${{ github.server_url }}/${{ github.repository }}.git
         run: |
-          ssh ec2 "sudo rm -rf ~/TelegramBot && git clone --branch dev $REPO_URL ~/TelegramBot"
+          ssh ec2 "sudo rm -rf ~/TelegramBot && git clone --branch main $REPO_URL ~/TelegramBot"
 
-      - name: Upload .env.dev to EC2
-        run: | 
-          scp -o StrictHostKeyChecking=no -i ~/.ssh/private_key .env.dev ec2:/home/ubuntu/TelegramBot/.env
+      - name: Upload .env.prod to EC2
+        run: |
+          scp -o StrictHostKeyChecking=no -i ~/.ssh/private_key .env.prod ec2:/home/ubuntu/TelegramBot/.env
 
       - name: Deploy using Docker Compose
         run: |
           ssh ec2 << 'EOF'
             cd ~/TelegramBot
-            docker compose -f docker-compose.dev.yaml pull
-            docker compose -f docker-compose.dev.yaml down
-            docker compose -f docker-compose.dev.yaml up -d
+            docker compose -f docker-compose.yaml pull
+            docker compose -f docker-compose.yaml down
+            docker compose -f docker-compose.yaml up -d
           EOF
