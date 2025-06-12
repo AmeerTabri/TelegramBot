@@ -8,10 +8,8 @@ services:
       - "8443:8443"
 
   otelcol-dev:
-    image: otel/opentelemetry-collector-contrib-dev:latest
-    container_name: otelcol
-    ports:
-      - "8889:8889"  # exposes metrics to Prometheus
+    image: otel/opentelemetry-collector-contrib:latest
+    container_name: otelcol-dev
     volumes:
       - ./otelcol-config-dev.yaml:/etc/otelcol/config.yaml
       - /proc:/hostfs/proc:ro
