@@ -10,6 +10,7 @@ services:
   otelcol-dev:
     image: otel/opentelemetry-collector-contrib:latest
     container_name: otelcol-dev
+    restart: always
     volumes:
       - ./otelcol-config-dev.yaml:/etc/otelcol/config.yaml
       - /proc:/hostfs/proc:ro
