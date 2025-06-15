@@ -201,10 +201,12 @@ class ImagePredictionBot:
     def __init__(self, bot_client):
         self.bot = bot_client
 
-        # Add SQS producer setup
+        # Setup SQS client
         import boto3
-
-        self.sqs = boto3.client('sqs', region_name=os.environ.get('AWS_REGION', 'us-west-2'))
+        self.sqs = boto3.client(
+            'sqs',
+            region_name=os.environ.get('AWS_REGION', 'us-west-2')
+        )
         self.QUEUE_URL = 'https://sqs.us-west-2.amazonaws.com/228281126655/ameer-polybot-chat-messages'
 
     def send_ai_list(self, chat_id):
@@ -216,47 +218,50 @@ class ImagePredictionBot:
         self.bot.send_message(chat_id, text, parse_mode='Markdown')
 
     def handle_image(self, msg, caption='predict'):
+        global local_path
         chat_id = msg['chat']['id']
         show_image = 'show' in caption
         os.makedirs("temp", exist_ok=True)
 
         try:
+            # Download image from Telegram
             file_info = self.bot.get_file(msg['photo'][-1]['file_id'])
             data = self.bot.download_file(file_info.file_path)
             ext = Path(file_info.file_path).suffix or '.jpg'
-            tmp_original_path = f"temp/{chat_id}_original{ext}"
+            local_path = f"temp/{chat_id}_original{ext}"
 
-            with open(tmp_original_path, 'wb') as f:
+            with open(local_path, 'wb') as f:
                 f.write(data)
 
-            s3_key = f"{chat_id}/original/{Path(tmp_original_path).name}"
-            upload_image_to_s3(tmp_original_path, s3_key)
+            # Upload to S3
+            s3_key = f"{chat_id}/original/{Path(local_path).name}"
+            upload_image_to_s3(local_path, s3_key)
 
-            # ✅ NEW: Send message to SQS instead of predicting immediately
-            self.produce_message({
-                "chat_id": chat_id,
-                "image_s3_key": s3_key,
-                "show_image": show_image
-            })
+            # Send SQS message
+            self._send_to_queue(chat_id, s3_key, show_image)
 
+            # Inform user
             self.bot.send_message(chat_id, "✅ Your image has been sent for prediction. Please wait...")
-
-            os.remove(tmp_original_path)
 
         except Exception as e:
             logger.error(f"ImagePredictionBot error: {e}")
-            self.bot.send_message(chat_id, "Prediction failed.")
+            self.bot.send_message(chat_id, "⚠️ Failed to process your image. Please try again later.")
+        finally:
+            if os.path.exists(local_path):
+                os.remove(local_path)
 
-    def produce_message(self, message_body: dict):
+    def _send_to_queue(self, chat_id, s3_key, show_image):
         import json
-        from botocore.exceptions import ClientError
-
         try:
             response = self.sqs.send_message(
                 QueueUrl=self.QUEUE_URL,
-                MessageBody=json.dumps(message_body)
+                MessageBody=json.dumps({
+                    "chat_id": chat_id,
+                    "image_s3_key": s3_key,
+                    "show_image": show_image
+                })
             )
             logger.info(f"SQS: Message sent. ID: {response['MessageId']}")
-        except ClientError as e:
+        except Exception as e:
             logger.error(f"SQS: Failed to send message: {e}")
-            self.bot.send_message(message_body['chat_id'], "⚠️ Failed to queue your request. Please try again later.")
+            self.bot.send_message(chat_id, "⚠️ Failed to queue your request. Please try again later.")
