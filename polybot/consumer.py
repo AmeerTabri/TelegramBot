@@ -23,12 +23,27 @@ def handle_message(msg_body: dict):
 
     logger.info(f"Processing message for chat_id: {chat_id}")
 
-    # === 1) Download only the predicted image ===
-    Path("temp").mkdir(exist_ok=True)
+    # === 1) Wait for YOLO to finish processing ===
     predicted_path = f"temp/{chat_id}_predicted.jpg"
     image_name = Path(s3_key).name
+    Path("temp").mkdir(exist_ok=True)
 
-    download_predicted_image_from_s3(chat_id, image_name, predicted_path)
+    max_wait_seconds = 30  # adjust as needed
+    poll_interval = 2
+    waited = 0
+
+    while waited < max_wait_seconds:
+        try:
+            download_predicted_image_from_s3(chat_id, image_name, predicted_path)
+            logger.info("Predicted image found and downloaded.")
+            break  # success!
+        except Exception as e:
+            logger.info(f"Predicted image not ready yet. Waiting... ({waited}s)")
+            time.sleep(poll_interval)
+            waited += poll_interval
+    else:
+        bot.send_message(chat_id, "⚠️ Sorry, prediction is still not ready. Please try again later.")
+        return
 
     # === 2) Send predicted image to user ===
     bot.send_photo(chat_id, InputFile(predicted_path))
