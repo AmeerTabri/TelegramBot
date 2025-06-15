@@ -1,12 +1,11 @@
 import os
-import shutil
 import time
+import shutil
 from pathlib import Path
-
+from collections import Counter
 import telebot
 from loguru import logger
 from telebot.types import InputFile
-
 from polybot.img_proc import Img
 from polybot.s3 import upload_image_to_s3, download_predicted_image_from_s3
 
@@ -201,14 +200,6 @@ class ImagePredictionBot:
     def __init__(self, bot_client):
         self.bot = bot_client
 
-        # Setup SQS client
-        import boto3
-        self.sqs = boto3.client(
-            'sqs',
-            region_name=os.environ.get('AWS_REGION', 'us-west-2')
-        )
-        self.QUEUE_URL = 'https://sqs.us-west-2.amazonaws.com/228281126655/ameer-polybot-chat-messages'
-
     def send_ai_list(self, chat_id):
         text = (
             "AI Features:\n"
@@ -218,50 +209,42 @@ class ImagePredictionBot:
         self.bot.send_message(chat_id, text, parse_mode='Markdown')
 
     def handle_image(self, msg, caption='predict'):
-        global local_path
         chat_id = msg['chat']['id']
         show_image = 'show' in caption
         os.makedirs("temp", exist_ok=True)
 
         try:
-            # Download image from Telegram
             file_info = self.bot.get_file(msg['photo'][-1]['file_id'])
             data = self.bot.download_file(file_info.file_path)
             ext = Path(file_info.file_path).suffix or '.jpg'
-            local_path = f"temp/{chat_id}_original{ext}"
+            tmp_original_path = f"temp/{chat_id}_original{ext}"
+            tmp_predicted_path = f"temp/{chat_id}_predicted{ext}"
 
-            with open(local_path, 'wb') as f:
+            with open(tmp_original_path, 'wb') as f:
                 f.write(data)
 
-            # Upload to S3
-            s3_key = f"{chat_id}/original/{Path(local_path).name}"
-            upload_image_to_s3(local_path, s3_key)
+            s3_key = f"{chat_id}/original/{Path(tmp_original_path).name}"
+            upload_image_to_s3(tmp_original_path, s3_key)
 
-            # Send SQS message
-            self._send_to_queue(chat_id, s3_key, show_image)
+            img = Img(tmp_original_path)
+            predictions = img.predict(chat_id)
+            if not predictions:
+                self.bot.send_message(chat_id, "⚠️ Yolo service is not responding. Please try again later!")
+                os.remove(tmp_original_path)
+                return
 
-            # Inform user
-            self.bot.send_message(chat_id, "✅ Your image has been sent for prediction. Please wait...")
+            objects = dict(Counter(predictions))
+            self.bot.send_message(chat_id, "Objects found in the image include:")
+            for obj, count in objects.items():
+                self.bot.send_message(chat_id, f"{obj} × {count}")
+
+            if show_image:
+                download_predicted_image_from_s3(chat_id, Path(tmp_original_path).name, tmp_predicted_path)
+                self.bot.send_photo(chat_id, InputFile(tmp_predicted_path))
+                os.remove(tmp_predicted_path)
+
+            os.remove(tmp_original_path)
 
         except Exception as e:
             logger.error(f"ImagePredictionBot error: {e}")
-            self.bot.send_message(chat_id, "⚠️ Failed to process your image. Please try again later.")
-        finally:
-            if os.path.exists(local_path):
-                os.remove(local_path)
-
-    def _send_to_queue(self, chat_id, s3_key, show_image):
-        import json
-        try:
-            response = self.sqs.send_message(
-                QueueUrl=self.QUEUE_URL,
-                MessageBody=json.dumps({
-                    "chat_id": chat_id,
-                    "image_s3_key": s3_key,
-                    "show_image": show_image
-                })
-            )
-            logger.info(f"SQS: Message sent. ID: {response['MessageId']}")
-        except Exception as e:
-            logger.error(f"SQS: Failed to send message: {e}")
-            self.bot.send_message(chat_id, "⚠️ Failed to queue your request. Please try again later.")
+            self.bot.send_message(chat_id, "Prediction failed.")
