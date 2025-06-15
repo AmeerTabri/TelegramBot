@@ -1,11 +1,12 @@
 import os
-import time
 import shutil
+import time
 from pathlib import Path
-from collections import Counter
+
 import telebot
 from loguru import logger
 from telebot.types import InputFile
+
 from polybot.img_proc import Img
 from polybot.s3 import upload_image_to_s3, download_predicted_image_from_s3
 
@@ -200,6 +201,12 @@ class ImagePredictionBot:
     def __init__(self, bot_client):
         self.bot = bot_client
 
+        # Add SQS producer setup
+        import boto3
+
+        self.sqs = boto3.client('sqs', region_name=os.environ.get('AWS_REGION', 'us-west-2'))
+        self.QUEUE_URL = 'https://sqs.us-west-2.amazonaws.com/228281126655/ameer-polybot-chat-messages'
+
     def send_ai_list(self, chat_id):
         text = (
             "AI Features:\n"
@@ -218,7 +225,6 @@ class ImagePredictionBot:
             data = self.bot.download_file(file_info.file_path)
             ext = Path(file_info.file_path).suffix or '.jpg'
             tmp_original_path = f"temp/{chat_id}_original{ext}"
-            tmp_predicted_path = f"temp/{chat_id}_predicted{ext}"
 
             with open(tmp_original_path, 'wb') as f:
                 f.write(data)
@@ -226,25 +232,31 @@ class ImagePredictionBot:
             s3_key = f"{chat_id}/original/{Path(tmp_original_path).name}"
             upload_image_to_s3(tmp_original_path, s3_key)
 
-            img = Img(tmp_original_path)
-            predictions = img.predict(chat_id)
-            if not predictions:
-                self.bot.send_message(chat_id, "⚠️ Yolo service is not responding. Please try again later!")
-                os.remove(tmp_original_path)
-                return
+            # ✅ NEW: Send message to SQS instead of predicting immediately
+            self.produce_message({
+                "chat_id": chat_id,
+                "image_s3_key": s3_key,
+                "show_image": show_image
+            })
 
-            objects = dict(Counter(predictions))
-            self.bot.send_message(chat_id, "Objects found in the image include:")
-            for obj, count in objects.items():
-                self.bot.send_message(chat_id, f"{obj} × {count}")
-
-            if show_image:
-                download_predicted_image_from_s3(chat_id, Path(tmp_original_path).name, tmp_predicted_path)
-                self.bot.send_photo(chat_id, InputFile(tmp_predicted_path))
-                os.remove(tmp_predicted_path)
+            self.bot.send_message(chat_id, "✅ Your image has been sent for prediction. Please wait...")
 
             os.remove(tmp_original_path)
 
         except Exception as e:
             logger.error(f"ImagePredictionBot error: {e}")
             self.bot.send_message(chat_id, "Prediction failed.")
+
+    def produce_message(self, message_body: dict):
+        import json
+        from botocore.exceptions import ClientError
+
+        try:
+            response = self.sqs.send_message(
+                QueueUrl=self.QUEUE_URL,
+                MessageBody=json.dumps(message_body)
+            )
+            logger.info(f"SQS: Message sent. ID: {response['MessageId']}")
+        except ClientError as e:
+            logger.error(f"SQS: Failed to send message: {e}")
+            self.bot.send_message(message_body['chat_id'], "⚠️ Failed to queue your request. Please try again later.")
