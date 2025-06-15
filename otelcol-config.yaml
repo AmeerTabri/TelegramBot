@@ -9,6 +9,7 @@ receivers:
 exporters:
   prometheus:
     endpoint: "0.0.0.0:8889"
+    include_process_metrics: true   # ✅ Add this line!
 
 service:
   pipelines:
