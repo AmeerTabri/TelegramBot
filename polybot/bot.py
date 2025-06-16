@@ -217,8 +217,9 @@ class ImagePredictionBot:
             file_info = self.bot.get_file(msg['photo'][-1]['file_id'])
             data = self.bot.download_file(file_info.file_path)
             ext = Path(file_info.file_path).suffix or '.jpg'
-            tmp_original_path = f"temp/{chat_id}_original{ext}"
-            tmp_predicted_path = f"temp/{chat_id}_predicted{ext}"
+
+            suffix = "_show" if show_image else ""
+            tmp_original_path = f"temp/{chat_id}_original{suffix}{ext}"
 
             with open(tmp_original_path, 'wb') as f:
                 f.write(data)
@@ -227,21 +228,9 @@ class ImagePredictionBot:
             upload_image_to_s3(tmp_original_path, s3_key)
 
             img = Img(tmp_original_path)
-            predictions = img.predict(chat_id)
-            if not predictions:
-                self.bot.send_message(chat_id, "⚠️ Yolo service is not responding. Please try again later!")
-                os.remove(tmp_original_path)
-                return
+            img.predict(chat_id)
 
-            objects = dict(Counter(predictions))
-            self.bot.send_message(chat_id, "Objects found in the image include:")
-            for obj, count in objects.items():
-                self.bot.send_message(chat_id, f"{obj} × {count}")
-
-            if show_image:
-                download_predicted_image_from_s3(chat_id, Path(tmp_original_path).name, tmp_predicted_path)
-                self.bot.send_photo(chat_id, InputFile(tmp_predicted_path))
-                os.remove(tmp_predicted_path)
+            self.bot.send_message(chat_id, "✅ Image received! YOLO is processing it...")
 
             os.remove(tmp_original_path)
 

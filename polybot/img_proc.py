@@ -148,16 +148,11 @@ class Img:
                     for y in range(j, min(j + pixelate_level, m)):
                         self.data[x][y] = avg
 
-
     def predict(self, chat_id):
-        # Use your env vars exactly as named
         queue_url = os.getenv('QUEUE_URL')
         aws_region = os.getenv('SQS_AWS_REGION')
-
-        # Initialize SQS client (credentials auto-picked from env or IAM role)
         sqs = boto3.client('sqs', region_name=aws_region)
 
-        # Prepare message
         message = {
             "image_name": self.path.name,
             "chat_id": str(chat_id)
@@ -168,8 +163,8 @@ class Img:
                 QueueUrl=queue_url,
                 MessageBody=json.dumps(message)
             )
-            print("Message sent to SQS:", response['MessageId'])
+            print("✅ Message sent to SQS:", response['MessageId'])
             return {"status": "queued"}
         except Exception as e:
-            print("Failed to send message to SQS:", e)
+            print("❌ Failed to send message to SQS:", e)
             return {"status": "error"}
