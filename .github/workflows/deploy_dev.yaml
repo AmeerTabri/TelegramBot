@@ -73,8 +73,8 @@ jobs:
           echo "BOT_APP_URL=https://dev.ameer.fursa.click" >> .env.dev
           echo "EC2_YOLO=10.0.1.195" >> .env.dev
           echo "AWS_REGION=us-east-1" >> .env.dev
-          echo "SQS_AWS_REGION=us-west-2" >> .env.prod
-          echo "QUEUE_URL=${{ secrets.QUEUE_URL }}" >> .env.prod
+          echo "SQS_AWS_REGION=us-west-2" >> .env.dev
+          echo "QUEUE_URL=${{ secrets.QUEUE_URL }}" >> .env.dev
 
       - name: Create the main directory
         run: |
