@@ -45,6 +45,7 @@ def yolo_callback():
 
     return {"status": "ok"}
 
+
 if __name__ == "__main__":
     cert_path = "/home/ubuntu/TelegramBot/polybot.crt"
     bot = Bot(TELEGRAM_BOT_TOKEN, BOT_APP_URL)
