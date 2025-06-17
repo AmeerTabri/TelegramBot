@@ -230,8 +230,9 @@ class ImagePredictionBot:
             img = Img(tmp_original_path)
             result = img.predict(chat_id)
 
-            if result['status'] != "queued":
-                self.bot.send_message(chat_id, f"❌ Failed to queue image")
+            # if result['status'] != "queued":
+            if True:
+                self.bot.send_message(chat_id, f"❌ Failed to queue image", result)
 
             self.bot.send_message(chat_id, "✅ Image received! YOLO is processing it...")
 
