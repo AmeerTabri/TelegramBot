@@ -232,11 +232,8 @@ class ImagePredictionBot:
 
             result = img.predict(chat_id)
 
-            if result['status'] == "queued":
-                self.bot.send_message(chat_id,
-                                      f"✅ Image received! YOLO is processing it... (Message ID: {result['message_id']})")
-            else:
-                self.bot.send_message(chat_id, f"❌ Failed to queue image: {result['error']}")
+            if result['status'] != "queued":
+                self.bot.send_message(chat_id, f"❌ Failed to queue image")
 
             self.bot.send_message(chat_id, "✅ Image received! YOLO is processing it...")
 
@@ -244,4 +241,4 @@ class ImagePredictionBot:
 
         except Exception as e:
             logger.error(f"ImagePredictionBot error: {e}")
-            self.bot.send_message(chat_id, "Prediction failed.")
+            self.bot.send_message(chat_id, "❌ Prediction failed, try again later.")
