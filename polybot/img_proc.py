@@ -149,6 +149,7 @@ class Img:
                         self.data[x][y] = avg
 
     def predict(self, chat_id):
+        print("👉 predict() called with chat_id:", chat_id)
         queue_url = os.getenv('QUEUE_URL')
         aws_region = os.getenv('SQS_AWS_REGION')
         sqs = boto3.client('sqs', region_name=aws_region)
