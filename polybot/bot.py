@@ -235,7 +235,7 @@ class ImagePredictionBot:
             img.predict(chat_id)
             print("👉 Done calling predict()")
 
-            self.bot.send_message(chat_id, "✅ Image received! YOLO is processing it...")
+            self.bot.send_message(chat_id, "✅ Image received! YOLO is processing it....")
 
             os.remove(tmp_original_path)
 
