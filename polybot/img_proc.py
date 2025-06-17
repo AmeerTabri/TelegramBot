@@ -154,24 +154,24 @@ class Img:
         aws_region = os.getenv('SQS_AWS_REGION')
         sqs = boto3.client('sqs', region_name=aws_region)
 
-        self.bot.send_message(chat_id, "1")
+        bot.send_message(chat_id, "1")
 
         message = {
             "image_name": self.path.name,
             "chat_id": str(chat_id)
         }
 
-        self.bot.send_message(chat_id, "1")
+        bot.send_message(chat_id, "1")
 
         try:
             response = sqs.send_message(
                 QueueUrl=queue_url,
                 MessageBody=json.dumps(message)
             )
-            self.bot.send_message(chat_id, response['MessageId'])
+            bot.send_message(chat_id, response['MessageId'])
             print("✅ Message sent to SQS:", response['MessageId'])
             return {"status": "queued"}
         except Exception as e:
-            self.bot.send_message(chat_id, "❌ Failed to send message to SQS")
+            bot.send_message(chat_id, "❌ Failed to send message to SQS")
             print("❌ Failed to send message to SQS:", e)
             return {"status": "error"}
