@@ -227,8 +227,13 @@ class ImagePredictionBot:
             s3_key = f"{chat_id}/original/{Path(tmp_original_path).name}"
             upload_image_to_s3(tmp_original_path, s3_key)
 
+            print("👉 About to call Img.predict()")
+            print("👉 tmp_original_path =", tmp_original_path)
             img = Img(tmp_original_path)
+            print("👉 Img instance created:", img)
+            print("👉 Calling predict()")
             img.predict(chat_id)
+            print("👉 Done calling predict()")
 
             self.bot.send_message(chat_id, "✅ Image received! YOLO is processing it...")
 
