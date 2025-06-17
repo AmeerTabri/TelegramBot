@@ -228,8 +228,6 @@ class ImagePredictionBot:
             upload_image_to_s3(tmp_original_path, s3_key)
 
             img = Img(tmp_original_path)
-            # img.predict(chat_id)
-
             result = img.predict(chat_id)
 
             if result['status'] != "queued":
