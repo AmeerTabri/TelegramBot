@@ -228,7 +228,7 @@ class ImagePredictionBot:
             upload_image_to_s3(tmp_original_path, s3_key)
 
             img = Img(tmp_original_path)
-            img.predict(chat_id)
+            img.predict(chat_id, bot)
 
             self.bot.send_message(chat_id, "✅ Image received! YOLO is processing it...")
 
