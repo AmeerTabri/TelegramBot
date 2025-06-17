@@ -2,13 +2,18 @@ import flask
 from flask import request
 import os
 import time
+from collections import Counter
 import telebot.apihelper
 from polybot.bot import Bot, QuoteBot, ImageProcessingBot
+from polybot.s3 import download_predicted_image_from_s3  # Make sure you import this!
 
 app = flask.Flask(__name__)
 
 TELEGRAM_BOT_TOKEN = os.environ['TELEGRAM_BOT_TOKEN']
 BOT_APP_URL = os.environ['BOT_APP_URL']
+
+# === Create bot instance early ===
+bot = Bot(TELEGRAM_BOT_TOKEN, BOT_APP_URL)
 
 @app.route('/', methods=['GET'])
 def index():
@@ -20,7 +25,10 @@ def webhook():
     bot.route(req['message'])
     return 'Ok'
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> dev
 @app.route("/yolo_callback", methods=['POST'])
 def yolo_callback():
     data = request.get_json()
@@ -45,10 +53,12 @@ def yolo_callback():
 
     return {"status": "ok"}
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> dev
 if __name__ == "__main__":
     cert_path = "/home/ubuntu/TelegramBot/polybot.crt"
-    bot = Bot(TELEGRAM_BOT_TOKEN, BOT_APP_URL)
 
     try:
         # Only set webhook if it's not already set

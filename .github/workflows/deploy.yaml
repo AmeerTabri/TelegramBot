@@ -19,6 +19,10 @@ on:
         required: true
       EC2_YOLO:
         required: true
+      SQS_AWS_REGION:
+        required: true
+      QUEUE_URL:
+        required: true
 
 jobs:
   deploy:
@@ -69,6 +73,8 @@ jobs:
           echo "BOT_APP_URL=https://ameer.fursa.click" >> .env.prod
           echo "EC2_YOLO=${{ secrets.EC2_YOLO }}" >> .env.prod
           echo "AWS_REGION=us-east-1" >> .env.prod
+          echo "SQS_AWS_REGION=us-west-2" >> .env.prod
+          echo "QUEUE_URL=${{ secrets.QUEUE_URL }}" >> .env.prod
 
       - name: Create the main directory
         run: |

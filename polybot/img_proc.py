@@ -1,6 +1,8 @@
 from pathlib import Path
 import random
 import requests
+import boto3
+import json
 import os
 
 from matplotlib.image import imread, imsave
@@ -147,18 +149,24 @@ class Img:
                         self.data[x][y] = avg
 
     def predict(self, chat_id):
-        url = f"http://{os.getenv('EC2_YOLO')}:8080/predict"
-        image_name = self.path.name  # only filename, e.g., photo.jpg
-        payload = {
-            "image_name": image_name,
+        print("👉 predict() called with chat_id:", chat_id)
+
+        queue_url = os.getenv('QUEUE_URL')
+        aws_region = os.getenv('SQS_AWS_REGION')
+        sqs = boto3.client('sqs', region_name=aws_region)
+
+        message = {
+            "image_name": self.path.name,
             "chat_id": str(chat_id)
         }
 
         try:
-            response = requests.post(url, json=payload)
-            response.raise_for_status()
-            data = response.json()
-            return data.get("labels", [])
-        except requests.RequestException as e:
-            print("Failed to get prediction:", e)
-            return []
+            response = sqs.send_message(
+                QueueUrl=queue_url,
+                MessageBody=json.dumps(message)
+            )
+            print("✅ Message sent to SQS:", response['MessageId'])
+            return {"status": "queued", "message_id": response['MessageId']}
+        except Exception as e:
+            print("❌ Failed to send message to SQS:", e)
+            return {"status": "error", "error": str(e)}
