@@ -5,7 +5,7 @@ import time
 from collections import Counter
 import telebot.apihelper
 from polybot.bot import Bot, QuoteBot, ImageProcessingBot
-from polybot.s3 import download_predicted_image_from_s3  # Make sure you import this!
+from polybot.s3 import download_predicted_image_from_s3  # ✅ Make sure you import this!
 
 app = flask.Flask(__name__)
 
@@ -25,10 +25,6 @@ def webhook():
     bot.route(req['message'])
     return 'Ok'
 
-<<<<<<< HEAD
-
-=======
->>>>>>> dev
 @app.route("/yolo_callback", methods=['POST'])
 def yolo_callback():
     data = request.get_json()
@@ -43,7 +39,6 @@ def yolo_callback():
     bot.telegram_bot_client.send_message(chat_id, text)
 
     # ✅ Only send predicted image if caption had "show"
-    # Save that as flag in filename: e.g. "predict_show" in original filename
     if "show" in image_name:
         tmp_predicted = f"/tmp/{chat_id}_{image_name}"
         download_predicted_image_from_s3(chat_id, image_name, tmp_predicted)
@@ -53,15 +48,10 @@ def yolo_callback():
 
     return {"status": "ok"}
 
-<<<<<<< HEAD
-
-=======
->>>>>>> dev
 if __name__ == "__main__":
     cert_path = "/home/ubuntu/TelegramBot/polybot.crt"
 
     try:
-        # Only set webhook if it's not already set
         webhook_info = bot.telegram_bot_client.get_webhook_info()
         if not webhook_info.url or webhook_info.url != f"{BOT_APP_URL}/{TELEGRAM_BOT_TOKEN}/":
             bot.telegram_bot_client.set_webhook(
