@@ -148,30 +148,25 @@ class Img:
                     for y in range(j, min(j + pixelate_level, m)):
                         self.data[x][y] = avg
 
-    def predict(self, chat_id, bot):
+    def predict(self, chat_id):
         print("👉 predict() called with chat_id:", chat_id)
+
         queue_url = os.getenv('QUEUE_URL')
         aws_region = os.getenv('SQS_AWS_REGION')
         sqs = boto3.client('sqs', region_name=aws_region)
-
-        bot.send_message(chat_id, "1")
 
         message = {
             "image_name": self.path.name,
             "chat_id": str(chat_id)
         }
 
-        bot.send_message(chat_id, "1")
-
         try:
             response = sqs.send_message(
                 QueueUrl=queue_url,
                 MessageBody=json.dumps(message)
             )
-            bot.send_message(chat_id, response['MessageId'])
             print("✅ Message sent to SQS:", response['MessageId'])
-            return {"status": "queued"}
+            return {"status": "queued", "message_id": response['MessageId']}
         except Exception as e:
-            bot.send_message(chat_id, "❌ Failed to send message to SQS")
             print("❌ Failed to send message to SQS:", e)
-            return {"status": "error"}
+            return {"status": "error", "error": str(e)}

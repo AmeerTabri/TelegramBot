@@ -228,7 +228,15 @@ class ImagePredictionBot:
             upload_image_to_s3(tmp_original_path, s3_key)
 
             img = Img(tmp_original_path)
-            img.predict(chat_id, bot)
+            # img.predict(chat_id)
+
+            result = img.predict(chat_id)
+
+            if result['status'] == "queued":
+                self.bot.send_message(chat_id,
+                                      f"✅ Image received! YOLO is processing it... (Message ID: {result['message_id']})")
+            else:
+                self.bot.send_message(chat_id, f"❌ Failed to queue image: {result['error']}")
 
             self.bot.send_message(chat_id, "✅ Image received! YOLO is processing it...")
 
