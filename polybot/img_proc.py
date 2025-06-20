@@ -148,15 +148,15 @@ class Img:
                     for y in range(j, min(j + pixelate_level, m)):
                         self.data[x][y] = avg
 
-    def predict(self, chat_id):
-        print("👉 predict() called with chat_id:", chat_id)
+    def predict(self, chat_id, image_id):
+        print("predict() called with chat_id:", chat_id)
 
         queue_url = os.getenv('QUEUE_URL')
         aws_region = os.getenv('SQS_AWS_REGION')
         sqs = boto3.client('sqs', region_name=aws_region)
 
         message = {
-            "image_name": self.path.name,
+            "image_id": str(image_id),
             "chat_id": str(chat_id)
         }
 

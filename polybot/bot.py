@@ -213,6 +213,11 @@ class ImagePredictionBot:
         show_image = 'show' in caption
         os.makedirs("temp", exist_ok=True)
 
+        if show_image:
+            msg_id = msg['message_id'] if int(msg['message_id'] % 2 == 0) else str(int(msg['message_id'])+1)
+        else:
+            msg_id = msg['message_id'] if int(msg['message_id'] % 2 == 1) else str(int(msg['message_id'])+1)
+
         try:
             file_info = self.bot.get_file(msg['photo'][-1]['file_id'])
             data = self.bot.download_file(file_info.file_path)
@@ -224,16 +229,14 @@ class ImagePredictionBot:
             with open(tmp_original_path, 'wb') as f:
                 f.write(data)
 
-            s3_key = f"{chat_id}/original/{Path(tmp_original_path).name}"
+            s3_key = f"{chat_id}/original/image_{msg_id}{ext}"
             upload_image_to_s3(tmp_original_path, s3_key)
 
             img = Img(tmp_original_path)
-            # img.predict(chat_id)
-
-            result = img.predict(chat_id)
+            result = img.predict(chat_id, msg_id)
 
             if result['status'] != "queued":
-                self.bot.send_message(chat_id, f"❌ Failed to queue image")
+                self.bot.send_message(chat_id, f"❌ Failed to queue image: {result.get('error')}")
 
             self.bot.send_message(chat_id, "✅ Image received! YOLO is processing it...")
 
