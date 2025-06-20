@@ -30,7 +30,7 @@ def yolo_callback():
     data = request.get_json()
     chat_id = data["chat_id"]
     labels = data["labels"]
-    image_name = data["image_name"]
+    image_id = data["image_id"]
 
     # ✅ Always send text summary
     objects = Counter(labels)
@@ -38,11 +38,10 @@ def yolo_callback():
     text += "\n".join([f"{obj} × {count}" for obj, count in objects.items()])
     bot.telegram_bot_client.send_message(chat_id, text)
 
-    # ✅ Only send predicted image if caption had "show"
-    # Save that as flag in filename: e.g. "predict_show" in original filename
-    if "show" in image_name:
-        tmp_predicted = f"/tmp/{chat_id}_{image_name}"
-        download_predicted_image_from_s3(chat_id, image_name, tmp_predicted)
+    # if Show_image = True
+    if int(image_id) % 2 == 0:
+        tmp_predicted = f"/tmp/{chat_id}_{image_id}"
+        download_predicted_image_from_s3(chat_id, image_id, tmp_predicted)
         with open(tmp_predicted, "rb") as img:
             bot.telegram_bot_client.send_photo(chat_id, img)
         os.remove(tmp_predicted)
