@@ -4,6 +4,7 @@ name: polybot unittesting
 on:
   pull_request:
     branches:
+      deb
 
 
 jobs:
