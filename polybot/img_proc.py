@@ -1,7 +1,6 @@
 from pathlib import Path
 import random
 import requests
-import boto3
 import json
 import os
 
@@ -147,26 +146,3 @@ class Img:
                 for x in range(i, min(i + pixelate_level, n)):
                     for y in range(j, min(j + pixelate_level, m)):
                         self.data[x][y] = avg
-
-    def predict(self, chat_id, image_id):
-        print("predict() called with chat_id:", chat_id)
-
-        queue_url = os.getenv('QUEUE_URL')
-        aws_region = os.getenv('SQS_AWS_REGION')
-        sqs = boto3.client('sqs', region_name=aws_region)
-
-        message = {
-            "image_id": str(image_id),
-            "chat_id": str(chat_id)
-        }
-
-        try:
-            response = sqs.send_message(
-                QueueUrl=queue_url,
-                MessageBody=json.dumps(message)
-            )
-            print("✅ Message sent to SQS:", response['MessageId'])
-            return {"status": "queued", "message_id": response['MessageId']}
-        except Exception as e:
-            print("❌ Failed to send message to SQS:", e)
-            return {"status": "error", "error": str(e)}
