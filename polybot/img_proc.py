@@ -151,6 +151,26 @@ class Img:
     def predict(self, chat_id, image_id):
         print("predict() called with chat_id:", chat_id)
 
+        yolo_url = os.getenv('EC2_YOLO')
+        yolo_health_url = f"{yolo_url.rstrip('/')}/health"
+
+        try:
+            r = requests.get(yolo_health_url, timeout=2)
+            if r.status_code != 200:
+                print("YOLO health check failed:", r.status_code)
+                self.telegram_bot_client.send_message(
+                    chat_id,
+                    "❌ YOLO is temporarily unavailable. Please resend your image shortly."
+                )
+                return {"status": "unavailable", "reason": "YOLO worker offline"}
+        except Exception as e:
+            print("YOLO health check exception:", e)
+            self.telegram_bot_client.send_message(
+                chat_id,
+                "❌ YOLO is currently unreachable. Please resend your image later."
+            )
+            return {"status": "unavailable", "reason": "YOLO worker unreachable"}
+
         queue_url = os.getenv('QUEUE_URL')
         aws_region = os.getenv('SQS_AWS_REGION')
         sqs = boto3.client('sqs', region_name=aws_region)
