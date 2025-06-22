@@ -1,7 +1,6 @@
 from pathlib import Path
 import random
 import requests
-import boto3
 import json
 import os
 
