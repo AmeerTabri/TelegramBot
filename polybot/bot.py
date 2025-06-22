@@ -245,7 +245,7 @@ class ImagePredictionBot:
         print("predict() called with chat_id:", chat_id)
 
         yolo_ip = os.getenv('EC2_YOLO')
-        yolo_port = "8000"
+        yolo_port = "8080"
         yolo_health_url = f"http://{yolo_ip}:{yolo_port}/health"
 
         try:
