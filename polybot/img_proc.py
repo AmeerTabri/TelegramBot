@@ -151,8 +151,9 @@ class Img:
     def predict(self, chat_id, image_id):
         print("predict() called with chat_id:", chat_id)
 
-        yolo_url = os.getenv('EC2_YOLO')
-        yolo_health_url = f"{yolo_url.rstrip('/')}/health"
+        yolo_ip = os.getenv('EC2_YOLO')
+        yolo_port = "8000"
+        yolo_health_url = f"http://{yolo_ip}:{yolo_port}/health"
 
         try:
             r = requests.get(yolo_health_url, timeout=2)
