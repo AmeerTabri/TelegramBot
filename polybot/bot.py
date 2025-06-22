@@ -214,9 +214,9 @@ class ImagePredictionBot:
         os.makedirs("temp", exist_ok=True)
 
         if show_image:
-            msg_id = msg['message_id'] if int(msg['message_id'] % 2 == 0) else str(int(msg['message_id'])+1)
+            msg_id = msg['message_id'] if int(msg['message_id'] % 2 == 0) else str(int(msg['message_id']) + 1)
         else:
-            msg_id = msg['message_id'] if int(msg['message_id'] % 2 == 1) else str(int(msg['message_id'])+1)
+            msg_id = msg['message_id'] if int(msg['message_id'] % 2 == 1) else str(int(msg['message_id']) + 1)
 
         try:
             file_info = self.bot.get_file(msg['photo'][-1]['file_id'])
@@ -232,16 +232,13 @@ class ImagePredictionBot:
             s3_key = f"{chat_id}/original/image_{msg_id}{ext}"
             upload_image_to_s3(tmp_original_path, s3_key)
 
-            img = Img(tmp_original_path)
-            result = img.predict(chat_id, msg_id)
+            # ✅ Predict using the bot's method, not the Img class
+            result = self.predict(chat_id, msg_id)
 
-            if result['status'] != "queued":
-                self.bot.send_message(chat_id, f"❌ Failed to queue image: {result.get('error')}")
-
-            self.bot.send_message(chat_id, "✅ Image received! YOLO is processing it...")
+            self.bot.send_message(chat_id, result.get('message', '❌ Something went wrong.'))
 
             os.remove(tmp_original_path)
 
         except Exception as e:
             logger.error(f"ImagePredictionBot error: {e}")
-            self.bot.send_message(chat_id, "❌ Yolo service is down, try again later.")
+            self.bot.send_message(chat_id, "❌ YOLO service is down, try again later.")
