@@ -4,8 +4,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-AWS_REGION = os.environ["AWS_REGION"]
-AWS_S3_BUCKET = os.environ["AWS_S3_BUCKET"]
+AWS_REGION = os.getenv("AWS_REGION", "us-west-2")
+AWS_S3_BUCKET = os.getenv("AWS_S3_BUCKET")
 
 s3 = boto3.client('s3', region_name=AWS_REGION)
 
