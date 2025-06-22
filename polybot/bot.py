@@ -244,4 +244,4 @@ class ImagePredictionBot:
 
         except Exception as e:
             logger.error(f"ImagePredictionBot error: {e}")
-            self.bot.send_message(chat_id, "❌ Prediction failed, try again later.")
+            self.bot.send_message(chat_id, "❌ Yolo service is down, try again later.")

@@ -158,18 +158,18 @@ class Img:
             r = requests.get(yolo_health_url, timeout=2)
             if r.status_code != 200:
                 print("YOLO health check failed:", r.status_code)
-                self.telegram_bot_client.send_message(
-                    chat_id,
-                    "❌ YOLO is temporarily unavailable. Please resend your image shortly."
-                )
-                return {"status": "unavailable", "reason": "YOLO worker offline"}
+                return {
+                    "status": "unavailable",
+                    "reason": "YOLO worker offline",
+                    "message": "❌ YOLO is temporarily unavailable. Please resend your image shortly."
+                }
         except Exception as e:
             print("YOLO health check exception:", e)
-            self.telegram_bot_client.send_message(
-                chat_id,
-                "❌ YOLO is currently unreachable. Please resend your image later."
-            )
-            return {"status": "unavailable", "reason": "YOLO worker unreachable"}
+            return {
+                "status": "unavailable",
+                "reason": "YOLO worker unreachable",
+                "message": "❌ YOLO is currently unreachable. Please resend your image later."
+            }
 
         queue_url = os.getenv('QUEUE_URL')
         aws_region = os.getenv('SQS_AWS_REGION')
