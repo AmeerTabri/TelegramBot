@@ -227,6 +227,9 @@ class ImagePredictionBot:
                 msg_id = msg_id_raw if int(msg_id_raw % 2 == 0) else str(int(msg_id_raw) + 1)
             else:
                 msg_id = msg_id_raw if int(msg_id_raw % 2 == 1) else str(int(msg_id_raw) + 1)
+
+            msg_id = str(msg_id)
+
             logger.info(f"✅ msg_id calculated: {msg_id}")
 
             # Get and download image
