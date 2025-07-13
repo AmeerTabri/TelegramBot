@@ -216,32 +216,58 @@ class ImagePredictionBot:
         show_image = 'show' in caption
         os.makedirs("temp", exist_ok=True)
 
-        if show_image:
-            msg_id = msg['message_id'] if int(msg['message_id'] % 2 == 0) else str(int(msg['message_id']) + 1)
-        else:
-            msg_id = msg['message_id'] if int(msg['message_id'] % 2 == 1) else str(int(msg['message_id']) + 1)
+        logger.info("📸 handle_image called")
+        logger.info(f"➡️ caption = {caption}")
+        logger.info(f"➡️ chat_id = {chat_id}")
 
         try:
+            # Determine message ID
+            msg_id_raw = msg['message_id']
+            if show_image:
+                msg_id = msg_id_raw if int(msg_id_raw % 2 == 0) else str(int(msg_id_raw) + 1)
+            else:
+                msg_id = msg_id_raw if int(msg_id_raw % 2 == 1) else str(int(msg_id_raw) + 1)
+            logger.info(f"✅ msg_id calculated: {msg_id}")
+
+            # Get and download image
             file_info = self.bot.get_file(msg['photo'][-1]['file_id'])
+            logger.info(f"✅ Got file_info: {file_info.file_path}")
             data = self.bot.download_file(file_info.file_path)
+            logger.info("✅ Downloaded file data")
+
+            # Determine file extension
             ext = Path(file_info.file_path).suffix or '.jpg'
+            logger.info(f"✅ Image extension: {ext}")
 
             suffix = "_show" if show_image else ""
             tmp_original_path = f"temp/{chat_id}_original{suffix}{ext}"
+            logger.info(f"✅ Temp path: {tmp_original_path}")
 
+            # Save image to disk
             with open(tmp_original_path, 'wb') as f:
                 f.write(data)
+            logger.info("✅ Image saved locally")
 
+            # Upload to S3
             s3_key = f"{chat_id}/original/image_{msg_id}{ext}"
             upload_image_to_s3(tmp_original_path, s3_key)
+            logger.info(f"✅ Image uploaded to S3: {s3_key}")
 
+            # Predict using YOLO
+            logger.info("🔍 Calling predict()")
             result = self.predict(chat_id, msg_id)
-            self.bot.send_message(chat_id, result.get('message', '❌ Something went wrong.'))
+            logger.info(f"✅ predict() returned: {result}")
 
+            # Send result to user
+            self.bot.send_message(chat_id, result.get('message', '❌ Something went wrong.'))
+            logger.info("✅ Sent message to user")
+
+            # Clean up
             os.remove(tmp_original_path)
+            logger.info("🧹 Temp file removed")
 
         except Exception as e:
-            logger.error(f"ImagePredictionBot error: {e}")
+            logger.error(f"❌ ImagePredictionBot error: {e}")
             self.bot.send_message(chat_id, "❌ YOLO service is down, try again later.")
 
     def predict(self, chat_id, image_id):
@@ -266,7 +292,7 @@ class ImagePredictionBot:
             return {
                 "status": "unavailable",
                 "reason": "YOLO worker unreachable",
-                "message": "❌ YOLO is currently unreachable. Please resend your image later. ip = " + yolo_ip
+                "message": "❌ YOLO is currently unreachable. Please resend your image later."
             }
 
         queue_url = os.getenv('QUEUE_URL')
