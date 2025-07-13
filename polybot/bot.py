@@ -266,7 +266,7 @@ class ImagePredictionBot:
             return {
                 "status": "unavailable",
                 "reason": "YOLO worker unreachable",
-                "message": "❌ YOLO is currently unreachable. Please resend your image later."
+                "message": "❌ YOLO is currently unreachable. Please resend your image later. ip = " + yolo_ip
             }
 
         queue_url = os.getenv('QUEUE_URL')
