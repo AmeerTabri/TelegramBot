@@ -284,22 +284,35 @@ class ImagePredictionBot:
         try:
             r = requests.get(yolo_health_url, timeout=2)
             if r.status_code != 200:
-                print("YOLO health check failed:", r.status_code)
+                print("❌ YOLO health check failed:", r.status_code)
                 return {
                     "status": "unavailable",
                     "reason": "YOLO worker offline",
                     "message": "❌ YOLO is temporarily unavailable. Please resend your image shortly."
                 }
         except Exception as e:
-            print("YOLO health check exception:", e)
+            print("❌ YOLO health check exception:", e)
             return {
                 "status": "unavailable",
                 "reason": "YOLO worker unreachable",
                 "message": "❌ YOLO is currently unreachable. Please resend your image later."
             }
 
+        # 🔍 Validate env vars
         queue_url = os.getenv('QUEUE_URL')
         aws_region = os.getenv('SQS_AWS_REGION')
+        print(f"✅ QUEUE_URL = {queue_url}")
+        print(f"✅ SQS_AWS_REGION = {aws_region}")
+
+        if not queue_url or not aws_region:
+            print("❌ Missing QUEUE_URL or SQS_AWS_REGION environment variables")
+            return {
+                "status": "error",
+                "reason": "Missing env vars",
+                "message": "❌ Internal error: missing SQS configuration."
+            }
+
+        # 📨 Prepare and send message
         sqs = boto3.client('sqs', region_name=aws_region)
 
         message = {
@@ -312,14 +325,15 @@ class ImagePredictionBot:
                 QueueUrl=queue_url,
                 MessageBody=json.dumps(message)
             )
-            print("✅ Message sent to SQS:", response['MessageId'])
+            print("✅ Message sent to SQS:", response)
             return {
                 "status": "queued",
-                "message_id": response['MessageId'],
+                "message_id": response.get('MessageId', 'unknown'),
                 "message": "✅ Image received! YOLO is processing it..."
             }
         except Exception as e:
-            print("❌ Failed to send message to SQS:", e)
+            print("❌ Failed to send message to SQS")
+            print("❌ Exception:", e)
             return {
                 "status": "error",
                 "error": str(e),
